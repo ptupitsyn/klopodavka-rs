@@ -22,8 +22,8 @@ pub fn create_board() -> Tiles {
 }
 
 pub fn make_move(board: &mut Tiles, player: Player, x: usize, y: usize) {
-    // TODO: Somehow encode valid moves into a type,
-    // and make_move takes that type as arg, so valid move is guaranteed?
+    // TODO: Somehow encapsulate valid moves into a type (struct with private ctor)
+    // and make_move takes that type as arg, so valid move is guaranteed
     let tile = board[x][y];
 
 }
