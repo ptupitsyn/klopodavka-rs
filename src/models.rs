@@ -1,11 +1,15 @@
 enum Player {
     Red,
-    Blue
+    Blue,
 }
 
 enum Tile {
     Empty,
     Base(Player),
     Alive(Player),
-    Squashed(Player)
+    Squashed(Player),
 }
+
+const BOARD_SIZE:usize = 30;
+
+type Tiles = [[Tile; BOARD_SIZE]; BOARD_SIZE];
