@@ -21,7 +21,7 @@ pub fn create_board() -> Tiles {
     res
 }
 
-pub fn get_other_player(player: Player) -> Player {
+pub fn other_player(player: Player) -> Player {
     match player {
         Player::Red => Player::Blue,
         Player::Blue => Player::Red,
@@ -30,12 +30,12 @@ pub fn get_other_player(player: Player) -> Player {
 
 pub fn make_move(board: &mut Tiles, player: Player, x: usize, y: usize) {
     let tile = board[x][y];
-    let other_player = get_other_player(player);
+    let player2 = other_player(player);
 
     board[x][y] =
         match tile {
             Tile::Empty => Tile::Alive(player),
-            Tile::Alive(other_player) => Tile::Squashed(player),
+            Tile::Alive(player2) => Tile::Squashed(player),
             _ => { panic!("Invalid move") }
         }
 }
@@ -67,7 +67,17 @@ mod tests {
 
     #[test]
     fn get_other_player_returns_opponent() {
-        assert_eq!(Player::Red, get_other_player(Player::Blue));
-        assert_eq!(Player::Blue, get_other_player(Player::Red));
+        assert_eq!(Player::Red, other_player(Player::Blue));
+        assert_eq!(Player::Blue, other_player(Player::Red));
+    }
+
+    #[test]
+    #[should_panic]
+    fn make_move_panics_on_invalid_move() {
+        let mut board = create_board();
+        let player = Player::Red;
+        let (x, y) = base_pos(player);
+
+        make_move(&mut board, player, x, y);
     }
 }
