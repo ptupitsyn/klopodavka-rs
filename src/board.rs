@@ -92,7 +92,7 @@ pub fn moves(board: &Tiles, player: Player) -> Vec<(usize, usize)> {
 #[cfg(test)]
 mod tests {
     use crate::board::*;
-    use crate::models::*;
+    use crate::models::{Player, Tile, BOARD_HEIGHT, BOARD_WIDTH};
 
     #[test]
     fn create_board_returns_empty_board_with_bases() {
