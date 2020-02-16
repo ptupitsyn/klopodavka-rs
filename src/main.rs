@@ -4,13 +4,30 @@ mod models;
 use crate::board::*;
 use crate::models::*;
 
+use rand::Rng;
 use std::mem;
 
 fn main() {
     let mut board = create_board();
 
-    let (bx, by) = base_pos(Player::Red);
-    make_move(&mut board, Player::Red, bx + 1, by + 1);
+    for i in 1..20 {
+        let player = if i % 2 == 0 {
+            Player::Red
+        } else {
+            Player::Blue
+        };
+
+        let all_moves = moves(&board, player);
+
+        if all_moves.len() == 0 {
+            break;
+        }
+
+        let idx = rand::thread_rng().gen_range(0, all_moves.len());
+        println!("{} of {}", idx, all_moves.len());
+        let (x, y) = all_moves[idx];
+        make_move(&mut board, player, x, y);
+    }
 
     println!("Tile size: {}", mem::size_of::<Tile>());
     println!("Tiles size: {}", mem::size_of::<Tiles>());
