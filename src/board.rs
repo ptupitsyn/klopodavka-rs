@@ -32,12 +32,11 @@ pub fn make_move(board: &mut Tiles, player: Player, x: usize, y: usize) {
     let tile = board[x][y];
     let player2 = other_player(player);
 
-    board[x][y] =
-        match tile {
-            Tile::Empty => Tile::Alive(player),
-            Tile::Alive(player2) => Tile::Squashed(player),
-            _ => { panic!("Invalid move") }
-        }
+    board[x][y] = match tile {
+        Tile::Empty => Tile::Alive(player),
+        Tile::Alive(player2) => Tile::Squashed(player),
+        _ => panic!("Invalid move"),
+    }
 }
 
 pub fn neighbors(x: i32, y: i32) -> Vec<(i32, i32)> {
@@ -45,8 +44,9 @@ pub fn neighbors(x: i32, y: i32) -> Vec<(i32, i32)> {
 
     let offs: [i32; 3] = [-1, 0, 1];
 
-    let pairs = offs.iter()
-        .flat_map(|&a| offs.iter().map(move|&b| (a + x, b + y)))
+    let pairs = offs
+        .iter()
+        .flat_map(|&a| offs.iter().map(move |&b| (a + x, b + y)))
         .filter(|&(a, b)| a >= 0 && b >= 0 && a < w && b < h && (a, b) != (x, y))
         .collect();
 
@@ -117,4 +117,7 @@ mod tests {
 
         assert_eq!(Tile::Squashed(player2), board[x][y + 1]);
     }
+
+    #[test]
+    fn neighbors_returns_9_tiles_for_mid_board() {}
 }
