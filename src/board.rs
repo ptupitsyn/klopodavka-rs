@@ -80,4 +80,28 @@ mod tests {
 
         make_move(&mut board, player, x, y);
     }
+
+    #[test]
+    fn make_move_updates_empty_tile() {
+        let mut board = create_board();
+        let player = Player::Red;
+        let (x, y) = base_pos(player);
+
+        make_move(&mut board, player, x, y + 1);
+
+        assert_eq!(Tile::Alive(player), board[x][y + 1]);
+    }
+
+    #[test]
+    fn make_move_updates_alive_tile() {
+        let mut board = create_board();
+        let player = Player::Red;
+        let player2 = Player::Blue;
+        let (x, y) = base_pos(player);
+
+        make_move(&mut board, player, x, y + 1);
+        make_move(&mut board, player2, x, y + 1);
+
+        assert_eq!(Tile::Squashed(player2), board[x][y + 1]);
+    }
 }
