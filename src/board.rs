@@ -21,11 +21,23 @@ pub fn create_board() -> Tiles {
     res
 }
 
-pub fn make_move(board: &mut Tiles, player: Player, x: usize, y: usize) {
-    // TODO: Somehow encapsulate valid moves into a type (struct with private ctor)
-    // and make_move takes that type as arg, so valid move is guaranteed
-    let tile = board[x][y];
+pub fn get_other_player(player: Player) -> Player {
+    match player {
+        Player::Red => Player::Blue,
+        Player::Blue => Player::Red,
+    }
+}
 
+pub fn make_move(board: &mut Tiles, player: Player, x: usize, y: usize) {
+    let tile = board[x][y];
+    let other_player = get_other_player(player);
+
+    board[x][y] =
+        match tile {
+            Tile::Empty => Tile::Alive(player),
+            Tile::Alive(other_player) => Tile::Squashed(player),
+            _ => { panic!("Invalid move") }
+        }
 }
 
 #[cfg(test)]
@@ -46,8 +58,7 @@ mod tests {
                     assert_eq!(Tile::Base(Player::Red), tile);
                 } else if x == bx && y == by {
                     assert_eq!(Tile::Base(Player::Blue), tile);
-                }
-                else {
+                } else {
                     assert_eq!(Tile::Empty, tile);
                 }
             }
