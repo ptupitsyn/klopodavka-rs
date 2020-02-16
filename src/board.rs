@@ -127,9 +127,24 @@ mod tests {
         println!("{:?}", res);
         assert_eq!(res.len(), 8);
 
-        for a in x - 1..x + 1 {
-            for b in y - 1..y + 1 {
+        for a in x - 1..x + 2 {
+            for b in y - 1..y + 2 {
                 let is_mid = a == x && b == y;
+                assert_eq!(!is_mid, res.contains(&(a, b)));
+            }
+        }
+    }
+
+    #[test]
+    fn neighbors_returns_3_tiles_for_corner() {
+        let res = neighbors(0, 0);
+
+        println!("{:?}", res);
+        assert_eq!(res.len(), 3);
+
+        for a in 0..2 {
+            for b in 0..2 {
+                let is_mid = a == 0 && b == 0;
                 assert_eq!(!is_mid, res.contains(&(a, b)));
             }
         }
