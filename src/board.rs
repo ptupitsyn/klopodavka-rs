@@ -186,4 +186,17 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn moves_returns_base_neighbors_for_new_board() {
+        let board = create_board();
+        let res = moves(&board, Player::Red);
+
+        let (bx, by) = base_pos(Player::Red);
+        let mut expected = neighbors(bx, by);
+        expected.reverse();
+
+        println!("{:?}", res);
+        assert_eq!(res, expected);
+    }
 }
