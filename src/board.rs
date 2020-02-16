@@ -40,6 +40,17 @@ pub fn make_move(board: &mut Tiles, player: Player, x: usize, y: usize) {
         }
 }
 
+pub fn neighbors(x: usize, y: usize) -> Vec<(usize, usize)> {
+    // TODO: use flat_map to find combinations
+    // Can we return resulting iterator?
+    let offs = [-1, 0, 1];
+
+    let mut vec = Vec::new();
+    vec.push((x, y));
+    vec.iter().
+    vec
+}
+
 #[cfg(test)]
 mod tests {
     use crate::board::*;
