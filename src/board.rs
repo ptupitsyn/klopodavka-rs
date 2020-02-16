@@ -34,7 +34,7 @@ pub fn make_move(board: &mut Tiles, player: Player, x: usize, y: usize) {
 
     board[x][y] = match tile {
         Tile::Empty => Tile::Alive(player),
-        Tile::Alive(player2) => Tile::Squashed(player),
+        Tile::Alive(p) if p == player2 => Tile::Squashed(player),
         _ => panic!("Invalid move"),
     }
 }
@@ -57,13 +57,9 @@ pub fn neighbors(x: usize, y: usize) -> Vec<(usize, usize)> {
 
 pub fn moves(board: &Tiles, player: Player) -> Vec<(usize, usize)> {
     let mut res: Vec<(usize, usize)> = Vec::new();
-    let (w, h) = (BOARD_WIDTH as i32, BOARD_HEIGHT as i32);
-
+    let mut visited = [[false; BOARD_HEIGHT]; BOARD_WIDTH];
     let mut stack = Vec::new();
     stack.push(base_pos(player));
-
-    let mut visited = [[false; BOARD_HEIGHT]; BOARD_WIDTH];
-
     let enemy = other_player(player);
 
     loop {
