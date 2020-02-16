@@ -77,7 +77,10 @@ pub fn moves(board: &Tiles, player: Player) -> Vec<(usize, usize)> {
 
                     if tile == Tile::Empty || tile == Tile::Alive(enemy) {
                         res.push((x, y));
-                    } else if tile == Tile::Base(player) || tile == Tile::Squashed(player) {
+                    } else if tile == Tile::Base(player)
+                        || tile == Tile::Squashed(player)
+                        || tile == Tile::Alive(player)
+                    {
                         for (nx, ny) in neighbors(x, y) {
                             stack.push((nx, ny));
                         }
