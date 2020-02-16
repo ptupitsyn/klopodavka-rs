@@ -64,4 +64,10 @@ mod tests {
             }
         }
     }
+
+    #[test]
+    fn get_other_player_returns_opponent() {
+        assert_eq!(Player::Red, get_other_player(Player::Blue));
+        assert_eq!(Player::Blue, get_other_player(Player::Red));
+    }
 }
