@@ -202,4 +202,18 @@ mod tests {
         println!("{:?}", res);
         assert_eq!(res, expected);
     }
+
+    #[test]
+    fn moves_returns_neighbors_of_all_live_tiles() {
+        let mut board = create_board();
+        let (bx, by) = base_pos(Player::Red);
+        make_move(&mut board, Player::Red, bx + 1, by - 1);
+        make_move(&mut board, Player::Red, bx + 2, by - 2);
+
+        let res = moves(&board, Player::Red);
+
+        assert!(res.contains(&(bx + 3, by - 3)));
+        assert!(res.contains(&(bx + 2, by - 3)));
+        assert!(res.contains(&(bx + 1, by - 3)));
+    }
 }
