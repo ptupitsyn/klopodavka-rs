@@ -4,11 +4,16 @@ mod models;
 use crate::board::*;
 use crate::models::*;
 
+use std::mem;
+
 fn main() {
     let mut board = create_board();
 
     let (bx, by) = base_pos(Player::Red);
     make_move(&mut board, Player::Red, bx + 1, by + 1);
+
+    println!("Tile size: {}", mem::size_of::<Tile>());
+    println!("Tiles size: {}", mem::size_of::<Tiles>());
 
     let board_str = print_board(board);
     println!("{}", board_str);
