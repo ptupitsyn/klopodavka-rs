@@ -64,22 +64,24 @@ pub fn moves(board: &Tiles, player: Player) -> Vec<(usize, usize)> {
 
     let mut visited = [[false; BOARD_HEIGHT]; BOARD_WIDTH];
 
+    let enemy = other_player(player);
+
     loop {
-        // let (x, y) = stack.pop().unwrap();
         match stack.pop() {
             None => break,
             Some((x, y)) => {
                 if !(visited[x][y]) {
                     visited[x][y] = true;
 
-                    match board[x][y] {
-                        Tile::Empty => res.push((x, y)),
-                        Tile::Base(_) => {}
-                        Tile::Alive(_) => {}
-                        Tile::Squashed(_) => {}
-                    }
+                    let tile = board[x][y];
 
-                    for (nx, ny) in neighbors(x, y) {}
+                    if tile == Tile::Empty || tile == Tile::Alive(enemy) {
+                        res.push((x, y));
+                    } else if tile == Tile::Base(player) || tile == Tile::Squashed(player) {
+                        for (nx, ny) in neighbors(x, y) {
+                            stack.push((nx, ny));
+                        }
+                    }
                 }
             }
         }
