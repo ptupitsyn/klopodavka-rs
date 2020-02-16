@@ -68,11 +68,11 @@ mod tests {
             for y in 0..BOARD_HEIGHT {
                 let tile = board[x][y];
                 if x == rx && y == ry {
-                    assert_eq!(Tile::Base(Player::Red), tile);
+                    assert_eq!(tile, Tile::Base(Player::Red));
                 } else if x == bx && y == by {
-                    assert_eq!(Tile::Base(Player::Blue), tile);
+                    assert_eq!(tile, Tile::Base(Player::Blue));
                 } else {
-                    assert_eq!(Tile::Empty, tile);
+                    assert_eq!(tile, Tile::Empty);
                 }
             }
         }
@@ -80,8 +80,8 @@ mod tests {
 
     #[test]
     fn get_other_player_returns_opponent() {
-        assert_eq!(Player::Red, other_player(Player::Blue));
-        assert_eq!(Player::Blue, other_player(Player::Red));
+        assert_eq!(other_player(Player::Blue), Player::Red);
+        assert_eq!(other_player(Player::Red), Player::Blue);
     }
 
     #[test]
@@ -102,7 +102,7 @@ mod tests {
 
         make_move(&mut board, player, x, y + 1);
 
-        assert_eq!(Tile::Alive(player), board[x][y + 1]);
+        assert_eq!(board[x][y + 1], Tile::Alive(player));
     }
 
     #[test]
@@ -115,9 +115,23 @@ mod tests {
         make_move(&mut board, player, x, y + 1);
         make_move(&mut board, player2, x, y + 1);
 
-        assert_eq!(Tile::Squashed(player2), board[x][y + 1]);
+        assert_eq!(board[x][y + 1], Tile::Squashed(player2));
     }
 
     #[test]
-    fn neighbors_returns_9_tiles_for_mid_board() {}
+    fn neighbors_returns_8_tiles_for_mid_board() {
+        let x = 3;
+        let y = 5;
+        let res = neighbors(x, y);
+
+        println!("{:?}", res);
+        assert_eq!(res.len(), 8);
+
+        for a in x - 1..x + 1 {
+            for b in y - 1..y + 1 {
+                let is_mid = a == x && b == y;
+                assert_eq!(!is_mid, res.contains(&(a, b)));
+            }
+        }
+    }
 }
