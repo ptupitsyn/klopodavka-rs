@@ -40,15 +40,17 @@ pub fn make_move(board: &mut Tiles, player: Player, x: usize, y: usize) {
         }
 }
 
-pub fn neighbors(x: usize, y: usize) -> Vec<(usize, usize)> {
-    // TODO: use flat_map to find combinations
-    // Can we return resulting iterator?
-    let offs = [-1, 0, 1];
+pub fn neighbors(x: i32, y: i32) -> Vec<(i32, i32)> {
+    let (w, h) = (BOARD_WIDTH as i32, BOARD_HEIGHT as i32);
 
-    let mut vec = Vec::new();
-    vec.push((x, y));
-    vec.iter().
-    vec
+    let offs: [i32; 3] = [-1, 0, 1];
+
+    let pairs = offs.iter()
+        .flat_map(|&a| offs.iter().map(move|&b| (a + x, b + y)))
+        .filter(|&(a, b)| a >= 0 && b >= 0 && a < w && b < h && (a, b) != (x, y))
+        .collect();
+
+    pairs
 }
 
 #[cfg(test)]
