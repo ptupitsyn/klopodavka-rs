@@ -5,7 +5,11 @@ use crate::board::*;
 use crate::models::*;
 
 fn main() {
-    let board = create_board();
+    let mut board = create_board();
+
+    let (bx, by) = base_pos(Player::Red);
+    make_move(&mut board, Player::Red, bx + 1, by + 1);
+
     let board_str = print_board(board);
     println!("{}", board_str);
 }
