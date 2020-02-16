@@ -39,18 +39,53 @@ pub fn make_move(board: &mut Tiles, player: Player, x: usize, y: usize) {
     }
 }
 
-pub fn neighbors(x: i32, y: i32) -> Vec<(i32, i32)> {
+pub fn neighbors(x: usize, y: usize) -> Vec<(usize, usize)> {
     let (w, h) = (BOARD_WIDTH as i32, BOARD_HEIGHT as i32);
+    let (_x, _y) = (x as i32, y as i32);
 
     let offs: [i32; 3] = [-1, 0, 1];
 
     let pairs = offs
         .iter()
-        .flat_map(|&a| offs.iter().map(move |&b| (a + x, b + y)))
-        .filter(|&(a, b)| a >= 0 && b >= 0 && a < w && b < h && (a, b) != (x, y))
+        .flat_map(|&a| offs.iter().map(move |&b| (a + _x, b + _y)))
+        .filter(|&(a, b)| a >= 0 && b >= 0 && a < w && b < h && (a, b) != (_x, _y))
+        .map(|(a, b)| (a as usize, b as usize))
         .collect();
 
     pairs
+}
+
+pub fn moves(board: &Tiles, player: Player) -> Vec<(usize, usize)> {
+    let mut res: Vec<(usize, usize)> = Vec::new();
+    let (w, h) = (BOARD_WIDTH as i32, BOARD_HEIGHT as i32);
+
+    let mut stack = Vec::new();
+    stack.push(base_pos(player));
+
+    let mut visited = [[false; BOARD_HEIGHT]; BOARD_WIDTH];
+
+    loop {
+        // let (x, y) = stack.pop().unwrap();
+        match stack.pop() {
+            None => break,
+            Some((x, y)) => {
+                if !(visited[x][y]) {
+                    visited[x][y] = true;
+
+                    match board[x][y] {
+                        Tile::Empty => res.push((x, y)),
+                        Tile::Base(_) => {}
+                        Tile::Alive(_) => {}
+                        Tile::Squashed(_) => {}
+                    }
+
+                    for (nx, ny) in neighbors(x, y) {}
+                }
+            }
+        }
+    }
+
+    res
 }
 
 #[cfg(test)]
