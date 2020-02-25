@@ -21,9 +21,10 @@ pub const BASE_OFFSET: usize = 2;
 // TODO: This should probably be dynamic in size (vec) for customizable boards
 pub type Tiles = [[Tile; BOARD_HEIGHT]; BOARD_WIDTH];
 
+// TODO: Encapsulate
 pub struct GameState {
-    board: Tiles,
-    current_player: Player,
-    turn_length: u32,
-    moves_left: u32,
+    pub board: Tiles,
+    pub current_player: Player,
+    pub turn_length: u32,
+    pub moves_left: u32,
 }

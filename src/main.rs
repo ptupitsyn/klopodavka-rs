@@ -1,7 +1,9 @@
 mod board;
+mod game;
 mod models;
 
 use board::*;
+use game::*;
 use models::*;
 
 use rand::Rng;
@@ -10,7 +12,8 @@ use std::mem;
 // TODO: Clippy
 // TODO: std::iter::from_fn
 fn main() {
-    let mut board = create_board();
+    let game = create_game();
+    let mut board = game.board;
 
     for i in 1..20 {
         let player = if i % 2 == 0 {
