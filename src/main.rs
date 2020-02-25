@@ -1,12 +1,14 @@
 mod board;
 mod models;
 
-use crate::board::*;
-use crate::models::*;
+use board::*;
+use models::*;
 
 use rand::Rng;
 use std::mem;
 
+// TODO: Clippy
+// TODO: std::iter::from_fn
 fn main() {
     let mut board = create_board();
 
