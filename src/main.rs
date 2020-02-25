@@ -56,6 +56,7 @@ fn print_board(board: Tiles) -> String {
 
     let mut res = String::new();
 
+    #[allow(clippy::needless_range_loop)]
     for y in 0..BOARD_HEIGHT {
         for x in 0..BOARD_WIDTH {
             let tile = board[x][y];
