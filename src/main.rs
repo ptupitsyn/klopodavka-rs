@@ -24,7 +24,7 @@ fn main() {
 
         let all_moves = moves(&board, player);
 
-        if all_moves.len() == 0 {
+        if all_moves.is_empty() {
             break;
         }
 

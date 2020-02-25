@@ -2,14 +2,12 @@ use crate::board::*;
 use crate::models::*;
 
 pub fn create_game() -> GameState {
-    let g = GameState {
+    GameState {
         board: create_board(),
         current_player: Player::Red,
         moves_left: 5,
         turn_length: 5,
-    };
-
-    g
+    }
 }
 
 #[cfg(test)]

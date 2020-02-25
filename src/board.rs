@@ -45,14 +45,11 @@ pub fn neighbors(x: usize, y: usize) -> Vec<(usize, usize)> {
 
     let offs: [i32; 3] = [-1, 0, 1];
 
-    let pairs = offs
-        .iter()
+    offs.iter()
         .flat_map(|&a| offs.iter().map(move |&b| (a + _x, b + _y)))
         .filter(|&(a, b)| a >= 0 && b >= 0 && a < w && b < h && (a, b) != (_x, _y))
         .map(|(a, b)| (a as usize, b as usize))
-        .collect();
-
-    pairs
+        .collect()
 }
 
 pub fn moves(board: &Tiles, player: Player) -> Vec<(usize, usize)> {
