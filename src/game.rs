@@ -7,15 +7,20 @@ pub struct GameState {
     current_player: Player,
     turn_length: u32,
     moves_left: u32,
+    moves: Vec<(usize, usize)>,
 }
 
 impl GameState {
     pub fn new() -> GameState {
+        let tiles = board::create_board();
+        let player = Player::Red;
+
         GameState {
-            board: board::create_board(),
-            current_player: Player::Red,
+            board: tiles,
+            current_player: player,
             moves_left: 5,
             turn_length: 5,
+            moves: board::moves(&tiles, player),
         }
     }
 
@@ -23,24 +28,33 @@ impl GameState {
         self.current_player
     }
 
-    pub fn moves(&self) -> Vec<(usize, usize)> {
-        board::moves(&self.board, self.current_player)
+    pub fn moves(&self) -> &Vec<(usize, usize)> {
+        self.moves.as_ref()
     }
 
     pub fn make_move(&mut self, x: usize, y: usize) {
+        let valid = self.moves.contains(&(x, y));
+        if !valid {
+            panic!("Invalid move: ({}, {})", x, y)
+        }
+
         crate::board::make_move(&mut self.board, self.current_player, x, y);
 
         let last = self.moves_left == 1;
+
         let left = if last {
             self.turn_length
         } else {
             self.moves_left - 1
         };
+
         self.moves_left = left;
 
         if last {
             self.current_player = board::other_player(self.current_player);
         }
+
+        self.moves = board::moves(&self.board, self.current_player);
     }
 }
 
