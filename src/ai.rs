@@ -26,7 +26,11 @@ fn attack_move(game: &mut GameState) -> Option<TilePos> {
 }
 
 fn advance_move(game: &mut GameState) -> Option<TilePos> {
-    // TODO: Pick diagonal move closest to enemy base
+    // TODO: Compute move weights based on:
+    // * Neighbor count - less is better
+    // * Diagonal - true is better
+    // * Enemy base distance - less is better
+
     let board = game.board();
 
     let has_one_neighbor = |p: Pos| {
