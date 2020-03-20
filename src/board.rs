@@ -1,5 +1,4 @@
 use crate::models::*;
-use std::fmt;
 
 pub fn base_pos(p: Player) -> (usize, usize) {
     match p {
@@ -85,40 +84,6 @@ pub fn moves(board: &Tiles, player: Player) -> Vec<(usize, usize)> {
     }
 
     res
-}
-
-impl std::fmt::Display for GameState {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fn get_ch(tile: Tile) -> char {
-            match tile {
-                Tile::Empty => '.',
-                Tile::Base(Player::Blue) => '⬛',
-                Tile::Base(Player::Red) => '⬤',
-                Tile::Alive(Player::Blue) => '◻',
-                Tile::Alive(Player::Red) => '○',
-                Tile::Squashed(Player::Blue) => '◼',
-                Tile::Squashed(Player::Red) => '●',
-            }
-        }
-
-        let mut res = String::new();
-
-        #[allow(clippy::needless_range_loop)]
-        for y in 0..BOARD_HEIGHT {
-            for x in 0..BOARD_WIDTH {
-                let tile = self.board[x][y];
-                let ch = get_ch(tile);
-                res.push(ch);
-            }
-            res.push('\n');
-        }
-
-        write!(
-            f,
-            "{:?}, {} of {}\n{}",
-            self.current_player, self.moves_left, self.turn_length, res
-        )
-    }
 }
 
 #[cfg(test)]

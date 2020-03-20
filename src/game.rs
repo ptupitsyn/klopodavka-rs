@@ -1,5 +1,13 @@
 use crate::board;
 use crate::models::*;
+use std::fmt;
+
+pub struct GameState {
+    board: Tiles,
+    current_player: Player,
+    turn_length: u32,
+    moves_left: u32,
+}
 
 impl GameState {
     pub fn new() -> GameState {
@@ -11,11 +19,11 @@ impl GameState {
         }
     }
 
-    pub fn moves(self: &Self) -> Vec<(usize, usize)> {
+    pub fn moves(&self) -> Vec<(usize, usize)> {
         board::moves(&self.board, self.current_player)
     }
 
-    pub fn make_move(self: &mut Self, x: usize, y: usize) {
+    pub fn make_move(&mut self, x: usize, y: usize) {
         crate::board::make_move(&mut self.board, self.current_player, x, y);
 
         let last = self.moves_left == 1;
@@ -32,11 +40,46 @@ impl GameState {
     }
 }
 
+impl std::fmt::Display for GameState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fn get_ch(tile: Tile) -> char {
+            match tile {
+                Tile::Empty => '.',
+                Tile::Base(Player::Blue) => '⬛',
+                Tile::Base(Player::Red) => '⬤',
+                Tile::Alive(Player::Blue) => '◻',
+                Tile::Alive(Player::Red) => '○',
+                Tile::Squashed(Player::Blue) => '◼',
+                Tile::Squashed(Player::Red) => '●',
+            }
+        }
+
+        let mut res = String::new();
+
+        #[allow(clippy::needless_range_loop)]
+        for y in 0..BOARD_HEIGHT {
+            for x in 0..BOARD_WIDTH {
+                let tile = self.board[x][y];
+                let ch = get_ch(tile);
+                res.push(ch);
+            }
+            res.push('\n');
+        }
+
+        write!(
+            f,
+            "{:?}, {} of {}\n{}",
+            self.current_player, self.moves_left, self.turn_length, res
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::board;
+    use crate::game::GameState;
     use crate::models::Tile::Alive;
-    use crate::models::{GameState, Player, Tile};
+    use crate::models::{Player, Tile};
     use rand::Rng;
 
     #[test]

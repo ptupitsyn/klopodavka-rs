@@ -1,3 +1,4 @@
+mod ai;
 mod board;
 mod game;
 mod models;
@@ -10,7 +11,7 @@ use std::mem;
 // TODO: std::iter::from_fn
 // TODO: Encapsulate game stuff in a library, create different frontends (console, web, ...)
 fn main() {
-    let mut game = GameState::new();
+    let mut game = game::GameState::new();
 
     for _i in 1..20 {
         let all_moves = game.moves();
