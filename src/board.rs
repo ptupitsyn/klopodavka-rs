@@ -144,7 +144,7 @@ mod tests {
 
         make_move(&mut board, player, pos.x, pos.y + 1);
 
-        assert_eq!(board[pos.x][pos.y], Tile::Alive(player));
+        assert_eq!(board[pos.x][pos.y + 1], Tile::Alive(player));
     }
 
     #[test]
