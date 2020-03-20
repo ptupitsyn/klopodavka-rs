@@ -21,7 +21,12 @@ fn main() {
         }
 
         let idx = rand::thread_rng().gen_range(0, all_moves.len());
-        println!("{} of {}", idx, all_moves.len());
+        println!(
+            "{:?}: {} of {}",
+            game.current_player(),
+            idx,
+            all_moves.len()
+        );
         let (x, y) = all_moves[idx];
         game.make_move(x, y);
     }

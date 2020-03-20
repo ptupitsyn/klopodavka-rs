@@ -19,6 +19,10 @@ impl GameState {
         }
     }
 
+    pub fn current_player(&self) -> Player {
+        self.current_player
+    }
+
     pub fn moves(&self) -> Vec<(usize, usize)> {
         board::moves(&self.board, self.current_player)
     }
@@ -96,7 +100,7 @@ mod tests {
             }
         }
 
-        assert_eq!(game.current_player, Player::Red);
+        assert_eq!(game.current_player(), Player::Red);
         assert_eq!(game.turn_length, 5);
         assert_eq!(game.moves_left, 5);
 
@@ -107,7 +111,7 @@ mod tests {
     #[should_panic]
     fn make_move_panics_on_invalid_move() {
         let mut game = GameState::new();
-        let (bx, by) = board::base_pos(game.current_player);
+        let (bx, by) = board::base_pos(game.current_player());
 
         game.make_move(bx, by);
     }
@@ -115,11 +119,11 @@ mod tests {
     #[test]
     fn make_move_updates_board_and_move_count() {
         let mut game = GameState::new();
-        let (bx, by) = board::base_pos(game.current_player);
+        let (bx, by) = board::base_pos(game.current_player());
         game.make_move(bx, by + 1);
 
         assert_eq!(game.moves_left, game.turn_length - 1);
-        assert_eq!(game.board[bx][by + 1], Alive(game.current_player));
+        assert_eq!(game.board[bx][by + 1], Alive(game.current_player()));
     }
 
     #[test]
