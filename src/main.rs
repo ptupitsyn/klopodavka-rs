@@ -8,6 +8,7 @@ use rand::Rng;
 use std::mem;
 
 // TODO: std::iter::from_fn
+// TODO: Encapsulate game stuff in a library, create different frontends (console, web, ...)
 fn main() {
     let mut game = game::create_game();
 
