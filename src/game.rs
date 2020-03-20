@@ -170,8 +170,9 @@ mod tests {
             }
 
             let idx = rand::thread_rng().gen_range(0, all_moves.len());
+            let pos = all_moves[idx];
 
-            game.make_move(all_moves[idx]);
+            game.make_move(pos);
         }
 
         println!("{}", game);
