@@ -34,6 +34,7 @@ pub fn make_move(game: &mut GameState, x: usize, y: usize) {
 mod tests {
     use crate::board;
     use crate::game::*;
+    use crate::models::Tile::Alive;
     use crate::models::{Player, Tile};
     use rand::Rng;
 
@@ -69,7 +70,12 @@ mod tests {
 
     #[test]
     fn make_move_updates_board_and_move_count() {
-        let game = create_game();
+        let mut game = create_game();
+        let (bx, by) = board::base_pos(game.current_player);
+        make_move(&mut game, bx, by + 1);
+
+        assert_eq!(game.moves_left, game.turn_length - 1);
+        assert_eq!(game.board[bx][by + 1], Alive(game.current_player));
     }
 
     #[test]
