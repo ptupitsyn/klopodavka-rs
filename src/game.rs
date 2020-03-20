@@ -10,6 +10,10 @@ pub fn create_game() -> GameState {
     }
 }
 
+pub fn moves(game: &GameState) -> Vec<(usize, usize)> {
+    board::moves(&game.board, game.current_player)
+}
+
 pub fn make_move(game: &mut GameState, x: usize, y: usize) {
     crate::board::make_move(&mut game.board, game.current_player, x, y);
 

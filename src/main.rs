@@ -7,14 +7,12 @@ use models::*;
 use rand::Rng;
 use std::mem;
 
-// TODO: Clippy
 // TODO: std::iter::from_fn
 fn main() {
     let mut game = game::create_game();
-    let board = game.board;
 
-    for i in 1..5 {
-        let all_moves = board::moves(&board, game.current_player);
+    for _i in 1..20 {
+        let all_moves = game::moves(&game);
 
         if all_moves.is_empty() {
             break;
@@ -29,11 +27,11 @@ fn main() {
     println!("Tile size: {}", mem::size_of::<Tile>());
     println!("Tiles size: {}", mem::size_of::<Tiles>());
 
-    let board_str = print_board(board);
+    let board_str = print_board(&game.board);
     println!("{}", board_str);
 }
 
-fn print_board(board: Tiles) -> String {
+fn print_board(board: &Tiles) -> String {
     fn get_ch(tile: Tile) -> char {
         match tile {
             Tile::Empty => '.',
