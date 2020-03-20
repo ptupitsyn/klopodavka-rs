@@ -52,6 +52,8 @@ mod tests {
         }
 
         assert_eq!(game.current_player, Player::Red);
+
+        println!("{}", game);
     }
 
     #[test]
@@ -85,6 +87,6 @@ mod tests {
             make_move(&mut game, x, y);
         }
 
-        println!("{:?}", game.board);
+        println!("{}", game);
     }
 }
