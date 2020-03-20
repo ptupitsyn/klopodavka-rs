@@ -28,6 +28,10 @@ impl GameState {
         self.current_player
     }
 
+    pub fn board(&self) -> &Tiles {
+        &self.board
+    }
+
     pub fn moves(&self) -> &Vec<(usize, usize)> {
         self.moves.as_ref()
     }

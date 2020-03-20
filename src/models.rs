@@ -12,6 +12,15 @@ pub enum Tile {
     Squashed(Player),
 }
 
+impl Tile {
+    pub fn is_alive(self) -> bool {
+        match self {
+            Tile::Alive(_) => true,
+            _ => false,
+        }
+    }
+}
+
 pub const BOARD_WIDTH: usize = 8;
 
 pub const BOARD_HEIGHT: usize = 10;
