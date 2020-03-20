@@ -35,6 +35,7 @@ mod tests {
     use crate::board;
     use crate::game::*;
     use crate::models::{Player, Tile};
+    use rand::Rng;
 
     #[test]
     fn create_game_returns_new_game_state() {
@@ -65,5 +66,25 @@ mod tests {
     #[test]
     fn make_move_updates_board_and_move_count() {
         let game = create_game();
+    }
+
+    #[test]
+    fn make_random_move_fills_board_until_finished() {
+        let mut game = create_game();
+
+        loop {
+            let all_moves = moves(&game);
+
+            if all_moves.is_empty() {
+                break;
+            }
+
+            let idx = rand::thread_rng().gen_range(0, all_moves.len());
+            let (x, y) = all_moves[idx];
+
+            make_move(&mut game, x, y);
+        }
+
+        println!("{:?}", game.board);
     }
 }
