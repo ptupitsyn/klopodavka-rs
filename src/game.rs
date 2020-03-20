@@ -24,15 +24,12 @@ impl GameState {
         }
     }
 
-    pub fn moves(&self) -> &Vec<Pos> {
-        self.moves.as_ref()
+    pub fn board(&self) -> &Tiles {
+        &self.board
     }
 
-    pub fn moves2(&self) -> impl Iterator<Item = TilePos> + '_ {
-        self.moves.iter().map(move |&pos| TilePos {
-            pos,
-            tile: self.board[pos.x][pos.y],
-        })
+    pub fn moves(&self) -> &Vec<Pos> {
+        self.moves.as_ref()
     }
 
     pub fn make_move(&mut self, pos: Pos) {
@@ -102,7 +99,6 @@ mod tests {
     use crate::models::Tile::Alive;
     use crate::models::{Player, Pos, Tile};
     use rand::seq::SliceRandom;
-    use rand::Rng;
 
     impl Pos {
         pub fn new(x: usize, y: usize) -> Pos {
