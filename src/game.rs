@@ -1,9 +1,9 @@
-use crate::board::*;
+use crate::board;
 use crate::models::*;
 
 pub fn create_game() -> GameState {
     GameState {
-        board: create_board(),
+        board: board::create_board(),
         current_player: Player::Red,
         moves_left: 5,
         turn_length: 5,
@@ -21,16 +21,16 @@ pub fn make_move(game: &mut GameState, x: usize, y: usize) {
     };
     game.moves_left = left;
 
-    if (last) {
-        game.current_player = other_player(game.current_player);
+    if last {
+        game.current_player = board::other_player(game.current_player);
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::board::*;
+    use crate::board;
     use crate::game::*;
-    use crate::models::{Player, Tile, BOARD_HEIGHT, BOARD_WIDTH};
+    use crate::models::{Player, Tile};
 
     #[test]
     fn create_game_returns_new_game_state() {
@@ -47,5 +47,19 @@ mod tests {
         }
 
         assert_eq!(game.current_player, Player::Red);
+    }
+
+    #[test]
+    #[should_panic]
+    fn make_move_panics_on_invalid_move() {
+        let mut game = create_game();
+        let (bx, by) = board::base_pos(game.current_player);
+
+        make_move(&mut game, bx, by);
+    }
+
+    #[test]
+    fn make_move_updates_board_and_move_count() {
+        let game = create_game();
     }
 }

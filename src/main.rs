@@ -2,8 +2,6 @@ mod board;
 mod game;
 mod models;
 
-use board::*;
-use game::*;
 use models::*;
 
 use rand::Rng;
@@ -12,17 +10,11 @@ use std::mem;
 // TODO: Clippy
 // TODO: std::iter::from_fn
 fn main() {
-    let game = create_game();
-    let mut board = game.board;
+    let mut game = game::create_game();
+    let board = game.board;
 
-    for i in 1..20 {
-        let player = if i % 2 == 0 {
-            Player::Red
-        } else {
-            Player::Blue
-        };
-
-        let all_moves = moves(&board, player);
+    for i in 1..5 {
+        let all_moves = board::moves(&board, game.current_player);
 
         if all_moves.is_empty() {
             break;
@@ -31,7 +23,7 @@ fn main() {
         let idx = rand::thread_rng().gen_range(0, all_moves.len());
         println!("{} of {}", idx, all_moves.len());
         let (x, y) = all_moves[idx];
-        make_move(&mut board, player, x, y);
+        game::make_move(&mut game, x, y);
     }
 
     println!("Tile size: {}", mem::size_of::<Tile>());

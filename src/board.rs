@@ -35,7 +35,7 @@ pub fn make_move(board: &mut Tiles, player: Player, x: usize, y: usize) {
     board[x][y] = match tile {
         Tile::Empty => Tile::Alive(player),
         Tile::Alive(p) if p == player2 => Tile::Squashed(player),
-        _ => panic!("Invalid move"),
+        other => panic!("Invalid move: from {:?} to {:?}", other, player),
     }
 }
 
