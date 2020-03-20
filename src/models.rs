@@ -16,6 +16,10 @@ impl Tile {
     pub fn is_alive(self) -> bool {
         matches!(self, Tile::Alive(_))
     }
+
+    pub fn is_empty(self) -> bool {
+        matches!(self, Tile::Empty)
+    }
 }
 
 pub const BOARD_WIDTH: usize = 8;

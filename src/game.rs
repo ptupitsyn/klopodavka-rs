@@ -101,6 +101,7 @@ mod tests {
     use crate::game::GameState;
     use crate::models::Tile::Alive;
     use crate::models::{Player, Pos, Tile};
+    use rand::seq::SliceRandom;
     use rand::Rng;
 
     impl Pos {
@@ -163,16 +164,10 @@ mod tests {
         let mut game = GameState::new();
 
         loop {
-            let all_moves = game.moves();
-
-            if all_moves.is_empty() {
-                break;
+            match game.moves.choose(&mut rand::thread_rng()) {
+                None => break,
+                Some(&pos) => game.make_move(pos),
             }
-
-            let idx = rand::thread_rng().gen_range(0, all_moves.len());
-            let pos = all_moves[idx];
-
-            game.make_move(pos);
         }
 
         println!("{}", game);
