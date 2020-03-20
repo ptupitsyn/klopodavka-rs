@@ -10,6 +10,22 @@ pub fn create_game() -> GameState {
     }
 }
 
+pub fn make_move(game: &mut GameState, x: usize, y: usize) {
+    crate::board::make_move(&mut game.board, game.current_player, x, y);
+
+    let last = game.moves_left == 1;
+    let left = if last {
+        game.turn_length
+    } else {
+        game.moves_left - 1
+    };
+    game.moves_left = left;
+
+    if (last) {
+        game.current_player = other_player(game.current_player);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::board::*;
