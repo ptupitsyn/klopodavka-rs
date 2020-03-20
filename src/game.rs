@@ -123,11 +123,19 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn make_move_panics_on_invalid_move() {
+    fn make_move_panics_on_invalid_move_to_base() {
         let mut game = GameState::new();
         let (bx, by) = board::base_pos(game.current_player());
 
         game.make_move(bx, by);
+    }
+
+    #[test]
+    #[should_panic]
+    fn make_move_panics_on_invalid_move_to_disconnected_tile() {
+        let mut game = GameState::new();
+
+        game.make_move(0, 0);
     }
 
     #[test]
