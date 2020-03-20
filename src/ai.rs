@@ -1,22 +1,15 @@
 use crate::game;
+use crate::models::{Pos, TilePos};
 
-pub fn get_ai_move(game: &mut game::GameState) -> Option<(usize, usize)> {
-    let moves = game.moves();
-
-    if moves.is_empty() {
+pub fn get_ai_move(game: &mut game::GameState) -> Option<TilePos> {
+    if game.moves().is_empty() {
         return Option::None;
     }
 
-    let tiles = game.board();
+    let attack_move = game.moves2().find(|&t| t.tile.is_alive());
 
-    let attack_move = moves
-        .iter()
-        .map(|&(x, y)| (tiles[x][y], (x, y)))
-        .find(|&t| t.0.is_alive());
-
-    match attack_move {
-        None => {}
-        Some(tile) => return Option::Some(tile.1),
+    if let Some(res) = attack_move {
+        return attack_move;
     }
 
     //for (x, y) in moves {}

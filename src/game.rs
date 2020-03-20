@@ -7,7 +7,7 @@ pub struct GameState {
     current_player: Player,
     turn_length: u32,
     moves_left: u32,
-    moves: Vec<(usize, usize)>,
+    moves: Vec<Pos>,
 }
 
 impl GameState {
@@ -32,17 +32,24 @@ impl GameState {
         &self.board
     }
 
-    pub fn moves(&self) -> &Vec<(usize, usize)> {
+    pub fn moves(&self) -> &Vec<Pos> {
         self.moves.as_ref()
     }
 
-    pub fn make_move(&mut self, x: usize, y: usize) {
-        let valid = self.moves.contains(&(x, y));
+    pub fn moves2(&self) -> impl Iterator<Item = TilePos> + '_ {
+        self.moves.iter().map(move |&pos| TilePos {
+            pos,
+            tile: self.board[pos.x][pos.y],
+        })
+    }
+
+    pub fn make_move(&mut self, pos: Pos) {
+        let valid = self.moves.contains(&pos);
         if !valid {
-            panic!("Invalid move: ({}, {})", x, y)
+            panic!("Invalid move: {:?}", pos)
         }
 
-        crate::board::make_move(&mut self.board, self.current_player, x, y);
+        crate::board::make_move(&mut self.board, self.current_player, pos.x, pos.y);
 
         let last = self.moves_left == 1;
 
@@ -101,7 +108,7 @@ mod tests {
     use crate::board;
     use crate::game::GameState;
     use crate::models::Tile::Alive;
-    use crate::models::{Player, Tile};
+    use crate::models::{Player, Pos, Tile};
     use rand::Rng;
 
     #[test]
@@ -129,9 +136,9 @@ mod tests {
     #[should_panic]
     fn make_move_panics_on_invalid_move_to_base() {
         let mut game = GameState::new();
-        let (bx, by) = board::base_pos(game.current_player());
+        let pos = board::base_pos(game.current_player());
 
-        game.make_move(bx, by);
+        game.make_move(pos);
     }
 
     #[test]
@@ -139,17 +146,18 @@ mod tests {
     fn make_move_panics_on_invalid_move_to_disconnected_tile() {
         let mut game = GameState::new();
 
-        game.make_move(0, 0);
+        game.make_move(Pos::new(0, 0));
     }
 
     #[test]
     fn make_move_updates_board_and_move_count() {
         let mut game = GameState::new();
-        let (bx, by) = board::base_pos(game.current_player());
-        game.make_move(bx, by + 1);
+        let base_pos = board::base_pos(game.current_player());
+        let pos = Pos::new(base_pos.x, base_pos.y + 1);
+        game.make_move(pos);
 
         assert_eq!(game.moves_left, game.turn_length - 1);
-        assert_eq!(game.board[bx][by + 1], Alive(game.current_player()));
+        assert_eq!(game.board[pos.x][pos.y], Alive(game.current_player()));
     }
 
     #[test]
@@ -164,9 +172,8 @@ mod tests {
             }
 
             let idx = rand::thread_rng().gen_range(0, all_moves.len());
-            let (x, y) = all_moves[idx];
 
-            game.make_move(x, y);
+            game.make_move(all_moves[idx]);
         }
 
         println!("{}", game);

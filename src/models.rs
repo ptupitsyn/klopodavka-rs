@@ -14,10 +14,7 @@ pub enum Tile {
 
 impl Tile {
     pub fn is_alive(self) -> bool {
-        match self {
-            Tile::Alive(_) => true,
-            _ => false,
-        }
+        matches!(self, Tile::Alive(_))
     }
 }
 
@@ -29,3 +26,21 @@ pub const BASE_OFFSET: usize = 2;
 
 // TODO: This should probably be dynamic in size (vec) for customizable boards
 pub type Tiles = [[Tile; BOARD_HEIGHT]; BOARD_WIDTH];
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct Pos {
+    pub x: usize,
+    pub y: usize,
+}
+
+impl Pos {
+    pub fn new(x: usize, y: usize) -> Pos {
+        Pos { x, y }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub struct TilePos {
+    pub tile: Tile,
+    pub pos: Pos,
+}

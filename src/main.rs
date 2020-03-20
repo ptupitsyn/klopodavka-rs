@@ -27,8 +27,8 @@ fn main() {
             idx,
             all_moves.len()
         );
-        let (x, y) = all_moves[idx];
-        game.make_move(x, y);
+        let pos = all_moves[idx];
+        game.make_move(pos);
     }
 
     println!("Tile size: {}", mem::size_of::<Tile>());
