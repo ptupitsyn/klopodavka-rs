@@ -24,14 +24,6 @@ impl GameState {
         }
     }
 
-    pub fn current_player(&self) -> Player {
-        self.current_player
-    }
-
-    pub fn board(&self) -> &Tiles {
-        &self.board
-    }
-
     pub fn moves(&self) -> &Vec<Pos> {
         self.moves.as_ref()
     }
@@ -111,6 +103,12 @@ mod tests {
     use crate::models::{Player, Pos, Tile};
     use rand::Rng;
 
+    impl Pos {
+        pub fn new(x: usize, y: usize) -> Pos {
+            Pos { x, y }
+        }
+    }
+
     #[test]
     fn create_game_returns_new_game_state() {
         let game = GameState::new();
@@ -125,7 +123,7 @@ mod tests {
             }
         }
 
-        assert_eq!(game.current_player(), Player::Red);
+        assert_eq!(game.current_player, Player::Red);
         assert_eq!(game.turn_length, 5);
         assert_eq!(game.moves_left, 5);
 
@@ -136,7 +134,7 @@ mod tests {
     #[should_panic]
     fn make_move_panics_on_invalid_move_to_base() {
         let mut game = GameState::new();
-        let pos = board::base_pos(game.current_player());
+        let pos = board::base_pos(game.current_player);
 
         game.make_move(pos);
     }
@@ -152,12 +150,12 @@ mod tests {
     #[test]
     fn make_move_updates_board_and_move_count() {
         let mut game = GameState::new();
-        let base_pos = board::base_pos(game.current_player());
+        let base_pos = board::base_pos(game.current_player);
         let pos = Pos::new(base_pos.x, base_pos.y + 1);
         game.make_move(pos);
 
         assert_eq!(game.moves_left, game.turn_length - 1);
-        assert_eq!(game.board[pos.x][pos.y], Alive(game.current_player()));
+        assert_eq!(game.board[pos.x][pos.y], Alive(game.current_player));
     }
 
     #[test]

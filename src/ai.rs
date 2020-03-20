@@ -1,18 +1,20 @@
 use crate::game;
-use crate::models::{Pos, TilePos};
+use crate::game::GameState;
+use crate::models::TilePos;
 
 pub fn get_ai_move(game: &mut game::GameState) -> Option<TilePos> {
     if game.moves().is_empty() {
         return Option::None;
     }
 
-    let attack_move = game.moves2().find(|&t| t.tile.is_alive());
+    attack_move(game).or_else(|| advance_move(game))
+}
 
-    if let Some(res) = attack_move {
-        return attack_move;
-    }
+fn attack_move(game: &mut GameState) -> Option<TilePos> {
+    game.moves2().find(|&t| t.tile.is_alive())
+}
 
-    //for (x, y) in moves {}
-
-    Option::None
+fn advance_move(game: &mut GameState) -> Option<TilePos> {
+    // TODO: Pick diagonal move closest to enemy base
+    game.moves2().find(|&t| !t.tile.is_alive())
 }

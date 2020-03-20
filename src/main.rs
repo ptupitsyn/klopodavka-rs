@@ -5,7 +5,6 @@ mod models;
 
 use models::*;
 
-use rand::Rng;
 use std::mem;
 
 // TODO: std::iter::from_fn
@@ -14,21 +13,10 @@ fn main() {
     let mut game = game::GameState::new();
 
     for _i in 1..20 {
-        let all_moves = game.moves();
-
-        if all_moves.is_empty() {
-            break;
+        match ai::get_ai_move(&mut game) {
+            Some(tile) => game.make_move(tile.pos),
+            None => break,
         }
-
-        let idx = rand::thread_rng().gen_range(0, all_moves.len());
-        println!(
-            "{:?}: {} of {}",
-            game.current_player(),
-            idx,
-            all_moves.len()
-        );
-        let pos = all_moves[idx];
-        game.make_move(pos);
     }
 
     println!("Tile size: {}", mem::size_of::<Tile>());

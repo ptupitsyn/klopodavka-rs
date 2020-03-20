@@ -33,12 +33,6 @@ pub struct Pos {
     pub y: usize,
 }
 
-impl Pos {
-    pub fn new(x: usize, y: usize) -> Pos {
-        Pos { x, y }
-    }
-}
-
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct TilePos {
     pub tile: Tile,
