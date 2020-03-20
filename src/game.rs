@@ -20,6 +20,16 @@ mod tests {
     fn create_game_returns_new_game_state() {
         let game = create_game();
 
+        let tiles = game.board.iter().flat_map(|r| r.iter());
+        for tile in tiles {
+            match tile {
+                Tile::Empty => {}
+                Tile::Base(_) => {}
+                Tile::Alive(_) => panic!("Alive tile on new board"),
+                Tile::Squashed(_) => panic!("Squashed tile on new board"),
+            }
+        }
+
         assert_eq!(game.current_player, Player::Red);
     }
 }
