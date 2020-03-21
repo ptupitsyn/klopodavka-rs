@@ -113,8 +113,7 @@ mod tests {
         let tiles = game.board.iter().flat_map(|r| r.iter());
         for tile in tiles {
             match tile {
-                Tile::Empty => {}
-                Tile::Base(_) => {}
+                Tile::Empty | Tile::Base(_) => {}
                 Tile::Alive(_) => panic!("Alive tile on new board"),
                 Tile::Squashed(_) => panic!("Squashed tile on new board"),
             }
