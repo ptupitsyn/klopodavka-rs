@@ -10,8 +10,9 @@ pub struct GameState {
     moves: Vec<Pos>,
 }
 
+#[allow(clippy::new_without_default)]
 impl GameState {
-    pub fn new() -> GameState {
+    pub fn new() -> Self {
         let tiles = board::create_board();
         let player = Player::Red;
 
