@@ -27,16 +27,9 @@ pub fn create_board() -> Tiles {
     res
 }
 
-pub fn other_player(player: Player) -> Player {
-    match player {
-        Player::Red => Player::Blue,
-        Player::Blue => Player::Red,
-    }
-}
-
 pub fn make_move(board: &mut Tiles, player: Player, x: usize, y: usize) {
     let tile = board[x][y];
-    let player2 = other_player(player);
+    let player2 = player.other();
 
     board[x][y] = match tile {
         Tile::Empty => Tile::Alive(player),
@@ -66,7 +59,7 @@ pub fn moves(board: &Tiles, player: Player) -> Vec<Pos> {
     let mut visited = [[false; BOARD_HEIGHT]; BOARD_WIDTH];
     let mut stack = Vec::new();
     stack.push(base_pos(player));
-    let enemy = other_player(player);
+    let enemy = player.other();
 
     loop {
         match stack.pop() {
@@ -119,12 +112,6 @@ mod tests {
                 }
             }
         }
-    }
-
-    #[test]
-    fn get_other_player_returns_opponent() {
-        assert_eq!(other_player(Player::Blue), Player::Red);
-        assert_eq!(other_player(Player::Red), Player::Blue);
     }
 
     #[test]

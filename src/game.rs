@@ -32,6 +32,10 @@ impl GameState {
         self.moves.as_ref()
     }
 
+    pub fn current_player(&self) -> Player {
+        self.current_player
+    }
+
     pub fn make_move(&mut self, pos: Pos) {
         let valid = self.moves.contains(&pos);
         if !valid {
@@ -51,7 +55,7 @@ impl GameState {
         self.moves_left = left;
 
         if last {
-            self.current_player = board::other_player(self.current_player);
+            self.current_player = self.current_player.other();
         }
 
         self.moves = board::moves(&self.board, self.current_player);

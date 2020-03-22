@@ -4,6 +4,15 @@ pub enum Player {
     Blue,
 }
 
+impl Player {
+    pub fn other(&self) -> Player {
+        match self {
+            Player::Red => Player::Blue,
+            Player::Blue => Player::Red,
+        }
+    }
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Tile {
     Empty,
@@ -41,4 +50,18 @@ pub struct Pos {
 pub struct TilePos {
     pub tile: Tile,
     pub pos: Pos,
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::models::Player;
+
+    #[test]
+    fn get_other_player_returns_opponent() {
+        let blue = Player::Blue;
+        let red = Player::Red;
+
+        assert_eq!(blue.other(), Player::Red);
+        assert_eq!(red.other(), Player::Blue);
+    }
 }

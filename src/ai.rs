@@ -2,6 +2,7 @@ use crate::board;
 use crate::game::GameState;
 use crate::models::{Pos, TilePos};
 use rand::seq::IteratorRandom;
+use std::i32;
 
 pub fn moves(game: &GameState) -> impl Iterator<Item = TilePos> + '_ {
     game.moves().iter().map(move |&pos| TilePos {
@@ -25,11 +26,6 @@ fn attack_move(game: &GameState) -> Option<TilePos> {
 }
 
 fn advance_move(game: &GameState) -> Option<TilePos> {
-    // TODO: Compute move weights based on:
-    // * Neighbor count - less is better
-    // * Diagonal - true is better
-    // * Enemy base distance - less is better
-
     let board = game.board();
 
     let has_one_neighbor = |p: Pos| {
@@ -47,4 +43,35 @@ fn random_move(game: &GameState) -> Option<TilePos> {
     moves(game).choose(&mut rand::thread_rng())
 }
 
-//fn get_tile_weighs(gam)
+fn get_advance_moves_with_weights(game: &GameState) -> Vec<(Pos, u32)> {
+    // Compute move weights based on:
+    // * Neighbor count - less is better
+    // * Diagonal - true is better
+    // * Enemy base distance - less is better
+
+    let res: Vec<(Pos, u32)> = Vec::new();
+    let board = game.board();
+    let enemy_base = board::base_pos(game.current_player().other());
+
+    for mv in moves(game) {
+        let mut weight = 1;
+
+        let neighbs = board::neighbors(mv.pos);
+
+        let nonempty_neighbs = neighbs
+            .iter()
+            .filter(|n| !board[n.x][n.y].is_empty())
+            .count();
+
+        let diag_neighbs = neighbs
+            .iter()
+            .filter(|n| n.x != mv.pos.x && n.y != mv.pos.y)
+            .count();
+    }
+
+    res
+}
+
+/*fn dist(a: Pos, b: Pos) -> u32 {
+    i32::ab(a.x - b.x)
+}*/
