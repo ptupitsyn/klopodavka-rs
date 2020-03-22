@@ -24,8 +24,8 @@ impl GameState {
         }
     }
 
-    pub fn board(&self) -> &Tiles {
-        &self.board
+    pub fn tile(&self, pos: Pos) -> Tile {
+        self.board[pos.x as usize][pos.y as usize]
     }
 
     pub fn moves(&self) -> &Vec<Pos> {
@@ -81,7 +81,7 @@ impl std::fmt::Display for GameState {
         #[allow(clippy::needless_range_loop)]
         for y in 0..BOARD_HEIGHT {
             for x in 0..BOARD_WIDTH {
-                let tile = self.board[x][y];
+                let tile = self.board[x as usize][y as usize];
                 let ch = get_ch(tile);
                 res.push(ch);
             }
@@ -105,7 +105,7 @@ mod tests {
     use rand::seq::SliceRandom;
 
     impl Pos {
-        pub fn new(x: usize, y: usize) -> Pos {
+        pub fn new(x: u16, y: u16) -> Pos {
             Pos { x, y }
         }
     }
@@ -155,7 +155,10 @@ mod tests {
         game.make_move(pos);
 
         assert_eq!(game.moves_left, game.turn_length - 1);
-        assert_eq!(game.board[pos.x][pos.y], Alive(game.current_player));
+        assert_eq!(
+            game.board[pos.x as usize][pos.y as usize],
+            Alive(game.current_player)
+        );
     }
 
     #[test]

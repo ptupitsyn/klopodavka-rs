@@ -7,7 +7,7 @@ use std::i32;
 pub fn moves(game: &GameState) -> impl Iterator<Item = TilePos> + '_ {
     game.moves().iter().map(move |&pos| TilePos {
         pos,
-        tile: game.board()[pos.x][pos.y],
+        tile: game.tile(pos),
     })
 }
 
@@ -26,12 +26,10 @@ fn attack_move(game: &GameState) -> Option<TilePos> {
 }
 
 fn advance_move(game: &GameState) -> Option<TilePos> {
-    let board = game.board();
-
     let has_one_neighbor = |p: Pos| {
         board::neighbors(p)
             .iter()
-            .filter(|n| !board[n.x][n.y].is_empty())
+            .filter(|&&n| !game.tile(n).is_empty())
             .count()
             == 1
     };
@@ -50,7 +48,6 @@ fn get_advance_moves_with_weights(game: &GameState) -> Vec<(Pos, u32)> {
     // * Enemy base distance - less is better
 
     let res: Vec<(Pos, u32)> = Vec::new();
-    let board = game.board();
     let enemy_base = board::base_pos(game.current_player().other());
 
     for mv in moves(game) {
@@ -60,7 +57,7 @@ fn get_advance_moves_with_weights(game: &GameState) -> Vec<(Pos, u32)> {
 
         let nonempty_neighbs = neighbs
             .iter()
-            .filter(|n| !board[n.x][n.y].is_empty())
+            .filter(|n| !game.tile(**n).is_empty())
             .count();
 
         let diag_neighbs = neighbs

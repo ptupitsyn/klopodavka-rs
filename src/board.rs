@@ -13,12 +13,16 @@ pub fn base_pos(p: Player) -> Pos {
     }
 }
 
+pub fn tile(board: &Tiles, x: u16, y: u16) -> Tile {
+    board[x as usize][y as usize]
+}
+
 pub fn create_board() -> Tiles {
-    let mut res = [[Tile::Empty; BOARD_HEIGHT]; BOARD_WIDTH];
+    let mut res = [[Tile::Empty; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
 
     fn place_base(p: Player, t: &mut Tiles) {
         let pos = base_pos(p);
-        t[pos.x][pos.y] = Tile::Base(p);
+        t[pos.x as usize][pos.y as usize] = Tile::Base(p);
     }
 
     place_base(Player::Red, &mut res);
@@ -27,11 +31,10 @@ pub fn create_board() -> Tiles {
     res
 }
 
-pub fn make_move(board: &mut Tiles, player: Player, x: usize, y: usize) {
-    let tile = board[x][y];
+pub fn make_move(board: &mut Tiles, player: Player, x: u16, y: u16) {
     let player2 = player.other();
 
-    board[x][y] = match tile {
+    board[x as usize][y as usize] = match tile(board, x, y) {
         Tile::Empty => Tile::Alive(player),
         Tile::Alive(p) if p == player2 => Tile::Squashed(player),
         other => panic!("Invalid move: from {:?} to {:?}", other, player),
@@ -48,15 +51,15 @@ pub fn neighbors(pos: Pos) -> Vec<Pos> {
         .flat_map(|&a| offs.iter().map(move |&b| (a + _x, b + _y)))
         .filter(|&(a, b)| a >= 0 && b >= 0 && a < w && b < h && (a, b) != (_x, _y))
         .map(|(a, b)| Pos {
-            x: a as usize,
-            y: b as usize,
+            x: a as u16,
+            y: b as u16,
         })
         .collect()
 }
 
 pub fn moves(board: &Tiles, player: Player) -> Vec<Pos> {
     let mut res: Vec<Pos> = Vec::new();
-    let mut visited = [[false; BOARD_HEIGHT]; BOARD_WIDTH];
+    let mut visited = [[false; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
     let mut stack = Vec::new();
     stack.push(base_pos(player));
     let enemy = player.other();
@@ -65,10 +68,11 @@ pub fn moves(board: &Tiles, player: Player) -> Vec<Pos> {
         match stack.pop() {
             None => break,
             Some(pos) => {
-                if !(visited[pos.x][pos.y]) {
-                    visited[pos.x][pos.y] = true;
+                let (x, y) = (pos.x as usize, pos.y as usize);
+                if !(visited[x][y]) {
+                    visited[x][y] = true;
 
-                    let tile = board[pos.x][pos.y];
+                    let tile = board[x][y];
 
                     if tile == Tile::Empty || tile == Tile::Alive(enemy) {
                         res.push(pos);
@@ -101,7 +105,7 @@ mod tests {
 
         for x in 0..BOARD_WIDTH {
             for y in 0..BOARD_HEIGHT {
-                let tile = board[x][y];
+                let tile = board[x as usize][y as usize];
                 let pos = Pos { x, y };
                 if pos == base_red {
                     assert_eq!(tile, Tile::Base(Player::Red));
@@ -131,7 +135,7 @@ mod tests {
 
         make_move(&mut board, player, pos.x, pos.y + 1);
 
-        assert_eq!(board[pos.x][pos.y + 1], Tile::Alive(player));
+        assert_eq!(tile(&board, pos.x, pos.y + 1), Tile::Alive(player));
     }
 
     #[test]
@@ -148,7 +152,7 @@ mod tests {
         make_move(&mut board, player, pos.x, pos.y);
         make_move(&mut board, player2, pos.x, pos.y);
 
-        assert_eq!(board[pos.x][pos.y], Tile::Squashed(player2));
+        assert_eq!(tile(&board, pos.x, pos.y + 1), Tile::Squashed(player2));
     }
 
     #[test]

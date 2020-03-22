@@ -31,19 +31,19 @@ impl Tile {
     }
 }
 
-pub const BOARD_WIDTH: usize = 8;
+pub const BOARD_WIDTH: u16 = 8;
 
-pub const BOARD_HEIGHT: usize = 10;
+pub const BOARD_HEIGHT: u16 = 10;
 
-pub const BASE_OFFSET: usize = 2;
+pub const BASE_OFFSET: u16 = 2;
 
 // TODO: This should probably be dynamic in size (vec) for customizable boards
-pub type Tiles = [[Tile; BOARD_HEIGHT]; BOARD_WIDTH];
+pub type Tiles = [[Tile; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Pos {
-    pub x: usize,
-    pub y: usize,
+    pub x: u16,
+    pub y: u16,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
