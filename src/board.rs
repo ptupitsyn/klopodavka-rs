@@ -1,18 +1,24 @@
 use crate::models::*;
 
-pub fn base_pos(p: Player) -> (usize, usize) {
+pub fn base_pos(p: Player) -> Pos {
     match p {
-        Player::Red => (BASE_OFFSET, BOARD_HEIGHT - BASE_OFFSET - 1),
-        Player::Blue => (BOARD_WIDTH - BASE_OFFSET - 1, BASE_OFFSET),
+        Player::Red => Pos {
+            x: BASE_OFFSET,
+            y: BOARD_HEIGHT - BASE_OFFSET - 1,
+        },
+        Player::Blue => Pos {
+            x: BOARD_WIDTH - BASE_OFFSET - 1,
+            y: BASE_OFFSET,
+        },
     }
 }
 
 pub fn create_board() -> Tiles {
-    let mut res = [[Tile::Empty; BOARD_HEIGHT]; BOARD_WIDTH];
+    let mut res = [[Tile::Empty; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
 
     fn place_base(p: Player, t: &mut Tiles) {
-        let (x, y) = base_pos(p);
-        t[x][y] = Tile::Base(p);
+        let pos = base_pos(p);
+        t[pos.x as usize][pos.y as usize] = Tile::Base(p);
     }
 
     place_base(Player::Red, &mut res);
@@ -21,64 +27,58 @@ pub fn create_board() -> Tiles {
     res
 }
 
-pub fn other_player(player: Player) -> Player {
-    match player {
-        Player::Red => Player::Blue,
-        Player::Blue => Player::Red,
-    }
-}
+pub fn make_move(board: &mut Tiles, player: Player, x: u16, y: u16) {
+    let player2 = player.other();
+    let (xx, yy) = (x as usize, y as usize);
 
-pub fn make_move(board: &mut Tiles, player: Player, x: usize, y: usize) {
-    let tile = board[x][y];
-    let player2 = other_player(player);
-
-    board[x][y] = match tile {
+    board[xx][yy] = match board[xx][yy] {
         Tile::Empty => Tile::Alive(player),
         Tile::Alive(p) if p == player2 => Tile::Squashed(player),
-        _ => panic!("Invalid move"),
+        other => panic!("Invalid move: from {:?} to {:?}", other, player),
     }
 }
 
-pub fn neighbors(x: usize, y: usize) -> Vec<(usize, usize)> {
+pub fn neighbors(pos: Pos) -> Vec<Pos> {
     let (w, h) = (BOARD_WIDTH as i32, BOARD_HEIGHT as i32);
-    let (_x, _y) = (x as i32, y as i32);
+    let (_x, _y) = (pos.x as i32, pos.y as i32);
 
     let offs: [i32; 3] = [-1, 0, 1];
 
-    let pairs = offs
-        .iter()
+    offs.iter()
         .flat_map(|&a| offs.iter().map(move |&b| (a + _x, b + _y)))
         .filter(|&(a, b)| a >= 0 && b >= 0 && a < w && b < h && (a, b) != (_x, _y))
-        .map(|(a, b)| (a as usize, b as usize))
-        .collect();
-
-    pairs
+        .map(|(a, b)| Pos {
+            x: a as u16,
+            y: b as u16,
+        })
+        .collect()
 }
 
-pub fn moves(board: &Tiles, player: Player) -> Vec<(usize, usize)> {
-    let mut res: Vec<(usize, usize)> = Vec::new();
-    let mut visited = [[false; BOARD_HEIGHT]; BOARD_WIDTH];
+pub fn moves(board: &Tiles, player: Player) -> Vec<Pos> {
+    let mut res: Vec<Pos> = Vec::new();
+    let mut visited = [[false; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
     let mut stack = Vec::new();
     stack.push(base_pos(player));
-    let enemy = other_player(player);
+    let enemy = player.other();
 
     loop {
         match stack.pop() {
             None => break,
-            Some((x, y)) => {
+            Some(pos) => {
+                let (x, y) = (pos.x as usize, pos.y as usize);
                 if !(visited[x][y]) {
                     visited[x][y] = true;
 
                     let tile = board[x][y];
 
                     if tile == Tile::Empty || tile == Tile::Alive(enemy) {
-                        res.push((x, y));
+                        res.push(pos);
                     } else if tile == Tile::Base(player)
                         || tile == Tile::Squashed(player)
                         || tile == Tile::Alive(player)
                     {
-                        for (nx, ny) in neighbors(x, y) {
-                            stack.push((nx, ny));
+                        for neighbor in neighbors(pos) {
+                            stack.push(neighbor);
                         }
                     }
                 }
@@ -92,20 +92,21 @@ pub fn moves(board: &Tiles, player: Player) -> Vec<(usize, usize)> {
 #[cfg(test)]
 mod tests {
     use crate::board::*;
-    use crate::models::{Player, Tile, BOARD_HEIGHT, BOARD_WIDTH};
+    use crate::models::{Player, Pos, Tile, BOARD_HEIGHT, BOARD_WIDTH};
 
     #[test]
     fn create_board_returns_empty_board_with_bases() {
         let board = create_board();
-        let (rx, ry) = base_pos(Player::Red);
-        let (bx, by) = base_pos(Player::Blue);
+        let base_red = base_pos(Player::Red);
+        let base_blue = base_pos(Player::Blue);
 
         for x in 0..BOARD_WIDTH {
             for y in 0..BOARD_HEIGHT {
-                let tile = board[x][y];
-                if x == rx && y == ry {
+                let tile = board[x as usize][y as usize];
+                let pos = Pos { x, y };
+                if pos == base_red {
                     assert_eq!(tile, Tile::Base(Player::Red));
-                } else if x == bx && y == by {
+                } else if pos == base_blue {
                     assert_eq!(tile, Tile::Base(Player::Blue));
                 } else {
                     assert_eq!(tile, Tile::Empty);
@@ -115,30 +116,26 @@ mod tests {
     }
 
     #[test]
-    fn get_other_player_returns_opponent() {
-        assert_eq!(other_player(Player::Blue), Player::Red);
-        assert_eq!(other_player(Player::Red), Player::Blue);
-    }
-
-    #[test]
     #[should_panic]
     fn make_move_panics_on_invalid_move() {
         let mut board = create_board();
         let player = Player::Red;
-        let (x, y) = base_pos(player);
-
-        make_move(&mut board, player, x, y);
+        let pos = base_pos(player);
+        make_move(&mut board, player, pos.x, pos.y);
     }
 
     #[test]
     fn make_move_updates_empty_tile() {
         let mut board = create_board();
         let player = Player::Red;
-        let (x, y) = base_pos(player);
+        let pos = base_pos(player);
 
-        make_move(&mut board, player, x, y + 1);
+        make_move(&mut board, player, pos.x, pos.y + 1);
 
-        assert_eq!(board[x][y + 1], Tile::Alive(player));
+        assert_eq!(
+            board[pos.x as usize][(pos.y + 1) as usize],
+            Tile::Alive(player)
+        );
     }
 
     #[test]
@@ -146,19 +143,26 @@ mod tests {
         let mut board = create_board();
         let player = Player::Red;
         let player2 = Player::Blue;
-        let (x, y) = base_pos(player);
+        let base = base_pos(player);
+        let pos = Pos {
+            x: base.x,
+            y: base.y + 1,
+        };
 
-        make_move(&mut board, player, x, y + 1);
-        make_move(&mut board, player2, x, y + 1);
+        make_move(&mut board, player, pos.x, pos.y);
+        make_move(&mut board, player2, pos.x, pos.y);
 
-        assert_eq!(board[x][y + 1], Tile::Squashed(player2));
+        assert_eq!(
+            board[pos.x as usize][pos.y as usize],
+            Tile::Squashed(player2)
+        );
     }
 
     #[test]
     fn neighbors_returns_8_tiles_for_mid_board() {
         let x = 3;
         let y = 5;
-        let res = neighbors(x, y);
+        let res = neighbors(Pos { x, y });
 
         println!("{:?}", res);
         assert_eq!(res.len(), 8);
@@ -166,14 +170,14 @@ mod tests {
         for a in x - 1..x + 2 {
             for b in y - 1..y + 2 {
                 let is_mid = a == x && b == y;
-                assert_eq!(!is_mid, res.contains(&(a, b)));
+                assert_eq!(!is_mid, res.contains(&Pos { x: a, y: b }));
             }
         }
     }
 
     #[test]
     fn neighbors_returns_3_tiles_for_corner() {
-        let res = neighbors(0, 0);
+        let res = neighbors(Pos { x: 0, y: 0 });
 
         println!("{:?}", res);
         assert_eq!(res.len(), 3);
@@ -181,7 +185,7 @@ mod tests {
         for a in 0..2 {
             for b in 0..2 {
                 let is_mid = a == 0 && b == 0;
-                assert_eq!(!is_mid, res.contains(&(a, b)));
+                assert_eq!(!is_mid, res.contains(&Pos { x: a, y: b }));
             }
         }
     }
@@ -191,8 +195,8 @@ mod tests {
         let board = create_board();
         let res = moves(&board, Player::Red);
 
-        let (bx, by) = base_pos(Player::Red);
-        let mut expected = neighbors(bx, by);
+        let base = base_pos(Player::Red);
+        let mut expected = neighbors(base);
         expected.reverse();
 
         println!("{:?}", res);
@@ -202,14 +206,15 @@ mod tests {
     #[test]
     fn moves_returns_neighbors_of_all_live_tiles() {
         let mut board = create_board();
-        let (bx, by) = base_pos(Player::Red);
+        let base = base_pos(Player::Red);
+        let (bx, by) = (base.x, base.y);
         make_move(&mut board, Player::Red, bx + 1, by - 1);
         make_move(&mut board, Player::Red, bx + 2, by - 2);
 
         let res = moves(&board, Player::Red);
 
-        assert!(res.contains(&(bx + 3, by - 3)));
-        assert!(res.contains(&(bx + 2, by - 3)));
-        assert!(res.contains(&(bx + 1, by - 3)));
+        assert!(res.contains(&Pos::new(bx + 3, by - 3)));
+        assert!(res.contains(&Pos::new(bx + 2, by - 3)));
+        assert!(res.contains(&Pos::new(bx + 1, by - 3)));
     }
 }
