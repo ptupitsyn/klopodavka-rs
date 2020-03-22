@@ -1,13 +1,8 @@
-[package]
-name = "klopodavka-rs"
-version = "0.1.0"
-authors = ["Pavel Tupitsyn <ptupitsyn@apache.org>"]
-edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-rand = "0.7.3"
+[workspace]
+members = [
+    "crates/klopodavka-lib",
+    "crates/klopodavka-console",
+]
 
 [profile.release]
 codegen-units = 1
