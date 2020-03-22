@@ -1,0 +1,8 @@
+[package]
+name = "klopodavka-rs"
+version = "0.1.0"
+authors = ["Pavel Tupitsyn <ptupitsyn@apache.org>"]
+edition = "2018"
+
+[dependencies]
+rand = "0.7.3"
