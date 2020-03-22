@@ -1,5 +1,5 @@
 [package]
-name = "klopodavka-rs"
+name = "klopodavka-lib"
 version = "0.1.0"
 authors = ["Pavel Tupitsyn <ptupitsyn@apache.org>"]
 edition = "2018"

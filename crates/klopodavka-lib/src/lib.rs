@@ -1,7 +1,7 @@
-mod ai;
-mod board;
-mod game;
-mod models;
+pub mod ai;
+pub mod board;
+pub mod game;
+pub mod models;
 
 #[cfg(test)]
 mod tests {
