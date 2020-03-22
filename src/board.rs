@@ -13,10 +13,6 @@ pub fn base_pos(p: Player) -> Pos {
     }
 }
 
-pub fn tile(board: &Tiles, x: u16, y: u16) -> Tile {
-    board[x as usize][y as usize]
-}
-
 pub fn create_board() -> Tiles {
     let mut res = [[Tile::Empty; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
 
@@ -33,8 +29,9 @@ pub fn create_board() -> Tiles {
 
 pub fn make_move(board: &mut Tiles, player: Player, x: u16, y: u16) {
     let player2 = player.other();
+    let (xx, yy) = (x as usize, y as usize);
 
-    board[x as usize][y as usize] = match tile(board, x, y) {
+    board[xx][yy] = match board[xx][yy] {
         Tile::Empty => Tile::Alive(player),
         Tile::Alive(p) if p == player2 => Tile::Squashed(player),
         other => panic!("Invalid move: from {:?} to {:?}", other, player),
@@ -135,7 +132,10 @@ mod tests {
 
         make_move(&mut board, player, pos.x, pos.y + 1);
 
-        assert_eq!(tile(&board, pos.x, pos.y + 1), Tile::Alive(player));
+        assert_eq!(
+            board[pos.x as usize][(pos.y + 1) as usize],
+            Tile::Alive(player)
+        );
     }
 
     #[test]
@@ -152,7 +152,10 @@ mod tests {
         make_move(&mut board, player, pos.x, pos.y);
         make_move(&mut board, player2, pos.x, pos.y);
 
-        assert_eq!(tile(&board, pos.x, pos.y + 1), Tile::Squashed(player2));
+        assert_eq!(
+            board[pos.x as usize][pos.y as usize],
+            Tile::Squashed(player2)
+        );
     }
 
     #[test]
