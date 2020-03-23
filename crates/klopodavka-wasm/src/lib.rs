@@ -2,6 +2,8 @@ mod utils;
 
 use wasm_bindgen::prelude::*;
 
+use klopodavka_lib::{ai, game};
+
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
 #[cfg(feature = "wee_alloc")]
@@ -9,11 +11,22 @@ use wasm_bindgen::prelude::*;
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 #[wasm_bindgen]
-extern {
+extern "C" {
     fn alert(s: &str);
 }
 
 #[wasm_bindgen]
 pub fn greet() {
-    alert("Hello, klopodavka-wasm!");
+    let mut game = game::GameState::new();
+
+    for _i in 1..20 {
+        match ai::get_ai_move(&game) {
+            Some(tile) => game.make_move(tile.pos),
+            None => break,
+        }
+    }
+
+    let board_str = format!("Hello from klopodavka: {}", game);
+
+    alert(&board_str);
 }
