@@ -40,6 +40,8 @@ pub const BASE_OFFSET: u16 = 2;
 // TODO: This should probably be dynamic in size (vec) for customizable boards
 pub type Tiles = [[Tile; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
 
+pub type BoolTiles = [[bool; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Pos {
     pub x: u16,

@@ -8,6 +8,17 @@ pub struct GameState {
     turn_length: u32,
     moves_left: u32,
     moves: Vec<Pos>,
+    moves_map: BoolTiles,
+}
+
+fn moves_map(moves: &[Pos]) -> BoolTiles {
+    let mut map = [[false; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
+
+    for pos in moves.iter() {
+        map[pos.x as usize][pos.y as usize] = true;
+    }
+
+    map
 }
 
 #[allow(clippy::new_without_default)]
@@ -15,13 +26,16 @@ impl GameState {
     pub fn new() -> Self {
         let tiles = board::create_board();
         let player = Player::Red;
+        let moves = board::moves(&tiles, player);
+        let moves_map = moves_map(&moves);
 
         GameState {
             board: tiles,
             current_player: player,
             moves_left: 5,
             turn_length: 5,
-            moves: board::moves(&tiles, player),
+            moves_map,
+            moves,
         }
     }
 
@@ -31,6 +45,10 @@ impl GameState {
 
     pub fn moves(&self) -> &Vec<Pos> {
         self.moves.as_ref()
+    }
+
+    pub fn is_valid_move(&self, pos: Pos) -> bool {
+        self.moves_map[pos.x as usize][pos.y as usize]
     }
 
     pub fn current_player(&self) -> Player {
