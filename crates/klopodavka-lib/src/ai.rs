@@ -82,3 +82,30 @@ fn dist(a: Pos, b: Pos) -> u16 {
 
     (dx + dy) as u16
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::ai::get_ai_move;
+    use crate::game;
+    use crate::models::Player;
+    use rand::seq::IteratorRandom;
+
+    #[test]
+    fn ai_wins_against_random() {
+        let mut game = game::GameState::new();
+        let ai_player = Player::Red;
+
+        while !game.moves().is_empty() {
+            let pos = if game.current_player() == ai_player {
+                get_ai_move(&game).unwrap().pos
+            } else {
+                *game.moves().iter().choose(&mut rand::thread_rng()).unwrap()
+            };
+
+            game.make_move(pos);
+        }
+
+        // AI opponent has no more moves left => AI won.
+        assert_eq!(game.current_player(), ai_player.other())
+    }
+}
