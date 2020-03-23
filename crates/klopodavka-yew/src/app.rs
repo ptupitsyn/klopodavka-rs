@@ -12,8 +12,10 @@ pub enum Msg {
     MakeAiMove,
 }
 
-fn render_tile(tile: Tile) -> Html {
-    let (text, style) = match tile {
+fn render_tile(game: &GameState, pos: Pos) -> Html {
+    let tile = game.tile(pos);
+
+    let (mut text, style) = match tile {
         Tile::Empty => ("", ""),
         Tile::Base(Player::Red) => ("🏠", "background-color: #ff9999"),
         Tile::Base(Player::Blue) => ("🏠", "background-color: #80b3ff"),
@@ -23,6 +25,14 @@ fn render_tile(tile: Tile) -> Html {
         Tile::Squashed(Player::Blue) => ("", "background-color: #005ce6"),
     };
 
+    let mut style = style.to_string();
+
+    // TODO: Inefficient check, use a two-dim array instead for O(1) check
+    if game.moves().contains(&pos) {
+        text = "·";
+        style.push_str("; cursor: pointer");
+    }
+
     html! {
         <td style=style>{ text }</td>
     }
@@ -31,7 +41,7 @@ fn render_tile(tile: Tile) -> Html {
 fn render_row(game: &GameState, y: u16) -> Html {
     html! {
         <tr>
-            { (0.. BOARD_WIDTH).map(|x| render_tile(game.tile(Pos {x, y}))).collect::<Html>() }
+            { (0.. BOARD_WIDTH).map(|x| render_tile(game, Pos {x, y})).collect::<Html>() }
         </tr>
     }
 }
@@ -67,8 +77,6 @@ impl Component for App {
             &self.game.current_player(),
             &self.game.moves_left()
         );
-
-        let board = format!("{}", &self.game);
 
         html! {
             <div>
