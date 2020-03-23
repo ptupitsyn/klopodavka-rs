@@ -137,6 +137,10 @@ impl Component for App {
                         </table>
                     </p>
                 </div>
+
+                <div>
+                    <span>{"Source: "}</span><a href="https://github.com/ptupitsyn/klopodavka-rs"> { "github.com/ptupitsyn/klopodavka-rs" } </a>
+                </div>
             </>
         }
     }
