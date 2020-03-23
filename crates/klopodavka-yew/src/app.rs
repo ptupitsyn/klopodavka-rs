@@ -1,12 +1,14 @@
+use klopodavka_lib::game::GameState;
 use klopodavka_lib::{ai, game};
 use yew::prelude::*;
 
 pub struct App {
-    clicked: bool,
-    onclick: Callback<ClickEvent>,
+    make_move_click: Callback<ClickEvent>,
+    game: GameState,
 }
+
 pub enum Msg {
-    Click,
+    MakeMove,
 }
 
 impl Component for App {
@@ -15,31 +17,37 @@ impl Component for App {
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         App {
-            clicked: false,
-            onclick: link.callback(|_| Msg::Click),
+            make_move_click: link.callback(|_| Msg::MakeMove),
+            game: game::GameState::new(),
         }
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
+        let game_state = &mut self.game;
+
         match msg {
-            Msg::Click => {
-                self.clicked = true;
-                true
-            }
+            Msg::MakeMove => match ai::get_ai_move(game_state) {
+                Some(tile) => {
+                    game_state.make_move(tile.pos);
+                    true
+                }
+                None => false,
+            },
         }
     }
 
     fn view(&self) -> Html {
-        let button_text = if self.clicked {
-            "Clicked!"
-        } else {
-            "Click me!"
-        };
+        let status = format!(
+            "Player: {:?}, Moves: {}",
+            &self.game.current_player(),
+            &self.game.moves_left()
+        );
 
         html! {
             <div>
-                <h1>{ "Hello Klopodavka" }</h1>
-                <button onclick=&self.onclick>{ button_text }</button>
+                <h1>{ "Klopodavka" }</h1>
+                <h3> { status } </h3>
+                <button onclick=&self.make_move_click>{ "Make a move" }</button>
             </div>
         }
     }
