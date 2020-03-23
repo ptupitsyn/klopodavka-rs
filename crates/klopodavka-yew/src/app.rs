@@ -4,12 +4,12 @@ use klopodavka_lib::{ai, game};
 use yew::prelude::*;
 
 pub struct App {
-    make_move_click: Callback<ClickEvent>,
+    ai_move_click: Callback<ClickEvent>,
     game: GameState,
 }
 
 pub enum Msg {
-    MakeMove,
+    MakeAiMove,
 }
 
 fn render_tile(tile: Tile) -> Html {
@@ -42,7 +42,7 @@ impl Component for App {
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         App {
-            make_move_click: link.callback(|_| Msg::MakeMove),
+            ai_move_click: link.callback(|_| Msg::MakeAiMove),
             game: game::GameState::new(),
         }
     }
@@ -51,7 +51,7 @@ impl Component for App {
         let game_state = &mut self.game;
 
         match msg {
-            Msg::MakeMove => match ai::get_ai_move(game_state) {
+            Msg::MakeAiMove => match ai::get_ai_move(game_state) {
                 Some(tile) => {
                     game_state.make_move(tile.pos);
                     true
@@ -74,7 +74,7 @@ impl Component for App {
             <div>
                 <h1>{ "Klopodavka" }</h1>
                 <h3>{ status }</h3>
-                <p><button onclick=&self.make_move_click>{ "Make a move" }</button></p>
+                <p><button onclick=&self.ai_move_click>{ "AI Move" }</button></p>
                 <table>
                     { (0.. BOARD_HEIGHT).map(|y| render_row(&self.game, y)).collect::<Html>() }
                 </table>
