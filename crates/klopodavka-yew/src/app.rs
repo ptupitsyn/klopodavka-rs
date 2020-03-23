@@ -34,15 +34,22 @@ fn render_tile(app: &App, pos: Pos) -> Html {
         let mut style = style.to_string();
         style.push_str("; cursor: pointer");
 
-        render_tile_avail(text, style.as_str(), app)
+        render_tile_avail(text, style.as_str(), app, pos)
     } else {
         render_tile_nonavail(text, style)
     }
 }
 
-fn render_tile_avail(text: &str, style: &str, app: &App) -> Html {
+fn render_tile_avail(text: &str, style: &str, app: &App, pos: Pos) -> Html {
+    let click_handler = app
+        .cell_click
+        .get(pos.x as usize)
+        .unwrap()
+        .get(pos.y as usize)
+        .unwrap();
+
     html! {
-        <td style=style>{ text }</td>
+        <td style=style onclick=click_handler>{ text }</td>
     }
 }
 
