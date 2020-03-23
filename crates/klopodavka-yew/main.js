@@ -1,6 +1,6 @@
-import init, { run_app } from './pkg/yew_wasm_pack_minimal.js';
+import init, { run_app } from './pkg/klopodavka_yew.js';
 async function main() {
-   await init('/pkg/yew_wasm_pack_minimal_bg.wasm');
+   await init('/pkg/klopodavka_yew_bg.wasm');
    run_app();
 }
-main()
+main();
