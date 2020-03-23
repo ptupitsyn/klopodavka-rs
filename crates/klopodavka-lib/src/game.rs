@@ -43,6 +43,17 @@ impl GameState {
         self.board[pos.x as usize][pos.y as usize]
     }
 
+    pub fn tiles(&self) -> impl Iterator<Item = TilePos> + '_ {
+        (0..BOARD_WIDTH).flat_map(move |x| {
+            (0..BOARD_HEIGHT)
+                .map(move |y| Pos { x, y })
+                .map(move |pos| TilePos {
+                    pos,
+                    tile: self.tile(pos),
+                })
+        })
+    }
+
     pub fn moves(&self) -> &Vec<Pos> {
         self.moves.as_ref()
     }

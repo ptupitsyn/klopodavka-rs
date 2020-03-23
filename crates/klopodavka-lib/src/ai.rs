@@ -26,14 +26,26 @@ fn attack_move(game: &GameState) -> Option<TilePos> {
 }
 
 fn advance_move(game: &GameState) -> Option<TilePos> {
-    moves(game).min_by(|&x, &y| weight(game, x.pos).cmp(&weight(game, y.pos)))
+    let has_squashed = game.tiles().any(|t| t.tile.is_squashed());
+
+    if !has_squashed {
+        // Return random diagonal move when fight has not yet started.
+        if let Some(m) = moves(game)
+            .filter(|m| weight(game, m.pos, false) == 1)
+            .choose(&mut rand::thread_rng())
+        {
+            return Some(m);
+        }
+    }
+
+    moves(game).min_by(|&x, &y| weight(game, x.pos, true).cmp(&weight(game, y.pos, true)))
 }
 
 fn random_move(game: &GameState) -> Option<TilePos> {
     moves(game).choose(&mut rand::thread_rng())
 }
 
-fn weight(game: &GameState, pos: Pos) -> u16 {
+fn weight(game: &GameState, pos: Pos, include_base_dist: bool) -> u16 {
     // Compute move weights based on:
     // * Neighbor count - less is better
     // * Diagonal - true is better
@@ -50,8 +62,12 @@ fn weight(game: &GameState, pos: Pos) -> u16 {
     let nondiag_neighbs = nonempty_neighbs - diag_neighbs;
 
     // TODO: Base positions should be saved within GameState
-    let enemy_base = board::base_pos(game.current_player().other());
-    let base_dist = dist(enemy_base, pos);
+    let base_dist = if include_base_dist {
+        let enemy_base = board::base_pos(game.current_player().other());
+        dist(enemy_base, pos)
+    } else {
+        0
+    };
 
     let weight = diag_neighbs + nondiag_neighbs * 2 + base_dist as usize;
 
