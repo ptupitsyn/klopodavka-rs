@@ -5,6 +5,7 @@ use yew::prelude::*;
 
 pub struct App {
     ai_move_click: Callback<ClickEvent>,
+    new_game_click: Callback<ClickEvent>,
     cell_click: Vec<Vec<Callback<ClickEvent>>>,
     game: GameState,
 }
@@ -12,6 +13,7 @@ pub struct App {
 pub enum Msg {
     MakeAiMove,
     MakeMove(Pos),
+    NewGame,
 }
 
 fn render_tile(app: &App, pos: Pos) -> Html {
@@ -82,6 +84,7 @@ impl Component for App {
                         .collect()
                 })
                 .collect(),
+            new_game_click: link.callback(|_| Msg::NewGame),
         }
     }
 
@@ -100,25 +103,32 @@ impl Component for App {
                 game_state.make_move(pos);
                 true
             }
+            Msg::NewGame => {
+                self.game = game::GameState::new();
+                true
+            }
         }
     }
 
     fn view(&self) -> Html {
         let status = format!(
-            "Player: {:?}, Moves: {}",
+            "Player: {:?} | Clicks: {}",
             &self.game.current_player(),
             &self.game.moves_left()
         );
 
         html! {
-            <div>
-                <h1>{ "Klopodavka" }</h1>
+            <>
+                <img src="https://raw.githubusercontent.com/ptupitsyn/klopodavka/master/website/pic/klopodavka.jpg" alt="Logo" style="width: 640px"/>
                 <h3>{ status }</h3>
-                <p><button onclick=&self.ai_move_click>{ "AI Move" }</button></p>
+                <div style="float: right">
+                    <button onclick=&self.ai_move_click>{ "AI Move" }</button>
+                    <button onclick=&self.new_game_click>{ "New Game" }</button>
+                </div>
                 <table>
                     { (0.. BOARD_HEIGHT).map(|y| render_row(&self, y)).collect::<Html>() }
                 </table>
-            </div>
+            </>
         }
     }
 }
