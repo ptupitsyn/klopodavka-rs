@@ -58,6 +58,7 @@ pub fn moves(board: &Tiles, player: Player) -> Vec<Pos> {
     stack.push(base_pos(player));
     let enemy = player.other();
 
+    // Traverse the tree of connected tiles and return all reachable empty tiles.
     loop {
         match stack.pop() {
             None => break,
