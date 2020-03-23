@@ -106,6 +106,6 @@ mod tests {
         }
 
         // AI opponent has no more moves left => AI won.
-        assert_eq!(game.current_player(), ai_player.other())
+        assert_eq!(game.winner().unwrap(), ai_player);
     }
 }

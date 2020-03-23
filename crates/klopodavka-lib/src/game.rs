@@ -66,6 +66,14 @@ impl GameState {
         self.current_player
     }
 
+    pub fn winner(&self) -> Option<Player> {
+        if self.moves.is_empty() {
+            Some(self.current_player.other())
+        } else {
+            None
+        }
+    }
+
     pub fn moves_left(&self) -> u32 {
         self.moves_left
     }
