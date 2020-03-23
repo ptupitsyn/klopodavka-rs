@@ -120,14 +120,23 @@ impl Component for App {
         html! {
             <>
                 <img src="https://raw.githubusercontent.com/ptupitsyn/klopodavka/master/website/pic/klopodavka.jpg" alt="Logo" style="width: 640px"/>
-                <h3>{ status }</h3>
-                <div style="float: right">
-                    <button onclick=&self.ai_move_click>{ "AI Move" }</button>
-                    <button onclick=&self.new_game_click>{ "New Game" }</button>
+
+                <div>
+                    <div style="float: right">
+                        <button class="button" style="margin-right: 10px" onclick=&self.ai_move_click>{ "AI Move" }</button>
+                        <button class="button" onclick=&self.new_game_click>{ "New Game" }</button>
+                    </div>
+
+                    <div>
+                        <strong>{ status }</strong>
+                    </div>
+
+                    <p>
+                        <table>
+                            { (0.. BOARD_HEIGHT).map(|y| render_row(&self, y)).collect::<Html>() }
+                        </table>
+                    </p>
                 </div>
-                <table>
-                    { (0.. BOARD_HEIGHT).map(|y| render_row(&self, y)).collect::<Html>() }
-                </table>
             </>
         }
     }
