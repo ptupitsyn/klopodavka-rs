@@ -82,6 +82,7 @@ impl GameState {
         }
 
         self.moves = board::moves(&self.board, self.current_player);
+        self.moves_map = moves_map(&self.moves);
     }
 }
 

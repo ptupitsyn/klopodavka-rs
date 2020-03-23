@@ -29,8 +29,7 @@ fn render_tile(app: &App, pos: Pos) -> Html {
         Tile::Squashed(Player::Blue) => ("", "background-color: #005ce6"),
     };
 
-    // TODO: Inefficient check, use a two-dim array instead for O(1) check
-    if app.game.moves().contains(&pos) {
+    if app.game.is_valid_move(pos) {
         text = "·";
 
         let mut style = style.to_string();
