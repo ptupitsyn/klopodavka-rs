@@ -1,4 +1,5 @@
 use klopodavka_lib::game::GameState;
+use klopodavka_lib::models::*;
 use klopodavka_lib::{ai, game};
 use yew::prelude::*;
 
@@ -9,6 +10,30 @@ pub struct App {
 
 pub enum Msg {
     MakeMove,
+}
+
+fn render_tile(tile: Tile) -> Html {
+    let (text, style) = match tile {
+        Tile::Empty => ("", ""),
+        Tile::Base(Player::Red) => ("🏠", "background-color: #ff9999"),
+        Tile::Base(Player::Blue) => ("🏠", "background-color: #80b3ff"),
+        Tile::Alive(Player::Red) => ("", "background-color: #ff9999"),
+        Tile::Alive(Player::Blue) => ("", "background-color: #80b3ff"),
+        Tile::Squashed(Player::Red) => ("", "background-color: #cc0000"),
+        Tile::Squashed(Player::Blue) => ("", "background-color: #005ce6"),
+    };
+
+    html! {
+        <td style=style>{ text }</td>
+    }
+}
+
+fn render_row(game: &GameState, y: u16) -> Html {
+    html! {
+        <tr>
+            { (0.. BOARD_WIDTH).map(|x| render_tile(game.tile(Pos {x, y}))).collect::<Html>() }
+        </tr>
+    }
 }
 
 impl Component for App {
@@ -43,11 +68,16 @@ impl Component for App {
             &self.game.moves_left()
         );
 
+        let board = format!("{}", &self.game);
+
         html! {
             <div>
                 <h1>{ "Klopodavka" }</h1>
-                <h3> { status } </h3>
+                <h3>{ status }</h3>
                 <button onclick=&self.make_move_click>{ "Make a move" }</button>
+                <table>
+                    { (0.. BOARD_HEIGHT).map(|y| render_row(&self.game, y)).collect::<Html>() }
+                </table>
             </div>
         }
     }
