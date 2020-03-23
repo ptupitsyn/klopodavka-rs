@@ -60,7 +60,7 @@ impl GameState {
     }
 
     pub fn make_move(&mut self, pos: Pos) {
-        let valid = self.moves.contains(&pos);
+        let valid = self.is_valid_move(pos);
         if !valid {
             panic!("Invalid move: {:?}", pos)
         }
@@ -188,14 +188,17 @@ mod tests {
     #[test]
     fn make_random_move_fills_board_until_finished() {
         let mut game = GameState::new();
+        let mut move_count = 0;
 
         loop {
+            move_count += 1;
             match game.moves.choose(&mut rand::thread_rng()) {
                 None => break,
                 Some(&pos) => game.make_move(pos),
             }
         }
 
+        println!("Total moves: {}", move_count);
         println!("{}", game);
     }
 }
