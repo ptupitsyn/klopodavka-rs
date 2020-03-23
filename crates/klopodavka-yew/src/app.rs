@@ -106,7 +106,7 @@ impl Component for App {
                     match ai::get_ai_move(game_state) {
                         Some(tile) => {
                             game_state.make_move(tile.pos);
-                        },
+                        }
                         None => break,
                     }
                 }
@@ -121,11 +121,19 @@ impl Component for App {
     }
 
     fn view(&self) -> Html {
-        let status = format!(
-            "Player: {:?} | Clicks: {}",
-            &self.game.current_player(),
-            &self.game.moves_left()
-        );
+        let g = &self.game;
+
+        let game_over = g.moves_left() > 0 && g.moves().len() == 0;
+
+        let status = if game_over {
+            format!("Game over, {:?} won!", g.current_player().other(),)
+        } else {
+            format!(
+                "Player: {:?} | Clicks: {}",
+                g.current_player(),
+                g.moves_left()
+            )
+        };
 
         html! {
             <>
