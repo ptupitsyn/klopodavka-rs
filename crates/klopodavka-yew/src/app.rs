@@ -25,14 +25,26 @@ fn render_tile(game: &GameState, pos: Pos) -> Html {
         Tile::Squashed(Player::Blue) => ("", "background-color: #005ce6"),
     };
 
-    let mut style = style.to_string();
-
     // TODO: Inefficient check, use a two-dim array instead for O(1) check
     if game.moves().contains(&pos) {
         text = "·";
-        style.push_str("; cursor: pointer");
-    }
 
+        let mut style = style.to_string();
+        style.push_str("; cursor: pointer");
+
+        render_tile_avail(text, style.as_str())
+    } else {
+        render_tile_nonavail(text, style)
+    }
+}
+
+fn render_tile_avail(text: &str, style: &str) -> Html {
+    html! {
+        <td style=style>{ text }</td>
+    }
+}
+
+fn render_tile_nonavail(text: &str, style: &str) -> Html {
     html! {
         <td style=style>{ text }</td>
     }
