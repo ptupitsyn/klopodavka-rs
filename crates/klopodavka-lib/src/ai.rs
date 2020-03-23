@@ -1,7 +1,6 @@
 use crate::board;
 use crate::game::GameState;
 use crate::models::{Pos, TilePos};
-use rand::seq::IteratorRandom;
 use std::i16;
 
 pub fn moves(game: &GameState) -> impl Iterator<Item = TilePos> + '_ {
@@ -16,9 +15,7 @@ pub fn get_ai_move(game: &GameState) -> Option<TilePos> {
         return Option::None;
     }
 
-    attack_move(game)
-        .or_else(|| advance_move(game))
-        .or_else(|| random_move(game))
+    attack_move(game).or_else(|| advance_move(game))
 }
 
 fn attack_move(game: &GameState) -> Option<TilePos> {
@@ -30,19 +27,24 @@ fn advance_move(game: &GameState) -> Option<TilePos> {
 
     if !has_squashed {
         // Return random diagonal move when fight has not yet started.
-        if let Some(m) = moves(game)
+        let moves: Vec<TilePos> = moves(game)
             .filter(|m| weight(game, m.pos, false) == 1)
-            .choose(&mut rand::thread_rng())
-        {
-            return Some(m);
+            .collect();
+
+        if !moves.is_empty() {
+            // There is no Random or Time on wasm-unknown target (???), they panic,
+            // use this sum as a pseudo-random number.
+            let empty_tiles_pos_sum: usize = game
+                .tiles()
+                .filter(|t| t.tile.is_empty())
+                .map(|t| t.pos.y as usize + t.pos.x as usize)
+                .sum();
+
+            return moves.get(empty_tiles_pos_sum % moves.len()).copied();
         }
     }
 
     moves(game).min_by(|&x, &y| weight(game, x.pos, true).cmp(&weight(game, y.pos, true)))
-}
-
-fn random_move(game: &GameState) -> Option<TilePos> {
-    moves(game).choose(&mut rand::thread_rng())
 }
 
 fn weight(game: &GameState, pos: Pos, include_base_dist: bool) -> u16 {
