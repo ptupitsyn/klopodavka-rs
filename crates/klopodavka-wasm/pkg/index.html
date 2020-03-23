@@ -8,7 +8,7 @@
 <noscript>This page contains WebAssembly and javascript content, please enable javascript in your browser.</noscript>
 <script src="./klopodavka_wasm.js"></script>
 <script>
-    // Generate wasm with `wasm-pack build --target no-modules` in this dir.
+    // Generate wasm with `wasm-pack build --target no-modules` in parent dir.
     async function run() {
         await wasm_bindgen('./klopodavka_wasm_bg.wasm');
 
