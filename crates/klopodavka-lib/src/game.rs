@@ -37,6 +37,10 @@ impl GameState {
         self.current_player
     }
 
+    pub fn moves_left(&self) -> u32 {
+        self.moves_left
+    }
+
     pub fn make_move(&mut self, pos: Pos) {
         let valid = self.moves.contains(&pos);
         if !valid {
