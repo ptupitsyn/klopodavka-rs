@@ -100,6 +100,17 @@ impl Component for App {
             },
             Msg::MakeMove(pos) => {
                 game_state.make_move(pos);
+
+                // Perform AI moves if current player is AI (Blue).
+                while game_state.current_player() == Player::Blue {
+                    match ai::get_ai_move(game_state) {
+                        Some(tile) => {
+                            game_state.make_move(tile.pos);
+                        },
+                        None => break,
+                    }
+                }
+
                 true
             }
             Msg::NewGame => {
