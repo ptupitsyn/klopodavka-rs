@@ -5,15 +5,17 @@ use yew::prelude::*;
 
 pub struct App {
     ai_move_click: Callback<ClickEvent>,
+    cell_click: Vec<Vec<Callback<ClickEvent>>>,
     game: GameState,
 }
 
 pub enum Msg {
     MakeAiMove,
+    MakeMove(Pos),
 }
 
-fn render_tile(game: &GameState, pos: Pos) -> Html {
-    let tile = game.tile(pos);
+fn render_tile(app: &App, pos: Pos) -> Html {
+    let tile = app.game.tile(pos);
 
     let (mut text, style) = match tile {
         Tile::Empty => ("", ""),
@@ -26,19 +28,19 @@ fn render_tile(game: &GameState, pos: Pos) -> Html {
     };
 
     // TODO: Inefficient check, use a two-dim array instead for O(1) check
-    if game.moves().contains(&pos) {
+    if app.game.moves().contains(&pos) {
         text = "·";
 
         let mut style = style.to_string();
         style.push_str("; cursor: pointer");
 
-        render_tile_avail(text, style.as_str())
+        render_tile_avail(text, style.as_str(), app)
     } else {
         render_tile_nonavail(text, style)
     }
 }
 
-fn render_tile_avail(text: &str, style: &str) -> Html {
+fn render_tile_avail(text: &str, style: &str, app: &App) -> Html {
     html! {
         <td style=style>{ text }</td>
     }
@@ -50,10 +52,10 @@ fn render_tile_nonavail(text: &str, style: &str) -> Html {
     }
 }
 
-fn render_row(game: &GameState, y: u16) -> Html {
+fn render_row(app: &App, y: u16) -> Html {
     html! {
         <tr>
-            { (0.. BOARD_WIDTH).map(|x| render_tile(game, Pos {x, y})).collect::<Html>() }
+            { (0.. BOARD_WIDTH).map(|x| render_tile(app, Pos {x, y})).collect::<Html>() }
         </tr>
     }
 }
@@ -66,6 +68,13 @@ impl Component for App {
         App {
             ai_move_click: link.callback(|_| Msg::MakeAiMove),
             game: game::GameState::new(),
+            cell_click: (0..BOARD_WIDTH)
+                .map(|x| {
+                    (0..BOARD_HEIGHT)
+                        .map(|y| link.callback(move |_| Msg::MakeMove(Pos { x, y })))
+                        .collect()
+                })
+                .collect(),
         }
     }
 
@@ -80,6 +89,10 @@ impl Component for App {
                 }
                 None => false,
             },
+            Msg::MakeMove(pos) => {
+                game_state.make_move(pos);
+                true
+            }
         }
     }
 
@@ -96,7 +109,7 @@ impl Component for App {
                 <h3>{ status }</h3>
                 <p><button onclick=&self.ai_move_click>{ "AI Move" }</button></p>
                 <table>
-                    { (0.. BOARD_HEIGHT).map(|y| render_row(&self.game, y)).collect::<Html>() }
+                    { (0.. BOARD_HEIGHT).map(|y| render_row(&self, y)).collect::<Html>() }
                 </table>
             </div>
         }
