@@ -39,16 +39,12 @@ fn weight(game: &GameState, pos: Pos) -> u16 {
     // * Diagonal - true is better
     // * Enemy base distance - less is better
 
-    let neighbs = board::neighbors(pos);
-
-    let nonempty_neighbs = neighbs
-        .iter()
-        .filter(|n| !game.tile(**n).is_empty())
+    let nonempty_neighbs = board::neighbors(pos)
+        .filter(|n| !game.tile(*n).is_empty())
         .count();
 
-    let diag_neighbs = neighbs
-        .iter()
-        .filter(|n| n.x != pos.x && n.y != pos.y && !game.tile(**n).is_empty())
+    let diag_neighbs = board::neighbors(pos)
+        .filter(|n| n.x != pos.x && n.y != pos.y && !game.tile(*n).is_empty())
         .count();
 
     let nondiag_neighbs = nonempty_neighbs - diag_neighbs;

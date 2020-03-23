@@ -38,20 +38,17 @@ pub fn make_move(board: &mut Tiles, player: Player, x: u16, y: u16) {
     }
 }
 
-pub fn neighbors(pos: Pos) -> Vec<Pos> {
+pub fn neighbors(pos: Pos) -> impl Iterator<Item = Pos> + 'static {
     let (w, h) = (BOARD_WIDTH as i32, BOARD_HEIGHT as i32);
     let (_x, _y) = (pos.x as i32, pos.y as i32);
 
-    let offs: [i32; 3] = [-1, 0, 1];
-
-    offs.iter()
-        .flat_map(|&a| offs.iter().map(move |&b| (a + _x, b + _y)))
-        .filter(|&(a, b)| a >= 0 && b >= 0 && a < w && b < h && (a, b) != (_x, _y))
+    [-1, 0, 1].iter()
+        .flat_map(move|&a| [-1, 0, 1].iter().map(move |&b| (a + _x, b + _y)))
+        .filter(move|&(a, b)| a >= 0 && b >= 0 && a < w && b < h && (a, b) != (_x, _y))
         .map(|(a, b)| Pos {
             x: a as u16,
             y: b as u16,
         })
-        .collect()
 }
 
 pub fn moves(board: &Tiles, player: Player) -> Vec<Pos> {
@@ -162,7 +159,7 @@ mod tests {
     fn neighbors_returns_8_tiles_for_mid_board() {
         let x = 3;
         let y = 5;
-        let res = neighbors(Pos { x, y });
+        let res: Vec<Pos> = neighbors(Pos { x, y }).collect();
 
         println!("{:?}", res);
         assert_eq!(res.len(), 8);
@@ -177,7 +174,7 @@ mod tests {
 
     #[test]
     fn neighbors_returns_3_tiles_for_corner() {
-        let res = neighbors(Pos { x: 0, y: 0 });
+        let res: Vec<Pos> = neighbors(Pos { x: 0, y: 0 }).collect();
 
         println!("{:?}", res);
         assert_eq!(res.len(), 3);
@@ -196,7 +193,7 @@ mod tests {
         let res = moves(&board, Player::Red);
 
         let base = base_pos(Player::Red);
-        let mut expected = neighbors(base);
+        let mut expected: Vec<Pos> = neighbors(base).collect();
         expected.reverse();
 
         println!("{:?}", res);
