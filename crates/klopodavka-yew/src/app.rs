@@ -123,10 +123,8 @@ impl Component for App {
     fn view(&self) -> Html {
         let g = &self.game;
 
-        let game_over = g.moves_left() > 0 && g.moves().len() == 0;
-
-        let status = if game_over {
-            format!("Game over, {:?} won!", g.current_player().other(),)
+        let status = if let Some(winner) = g.winner() {
+            format!("Game over, {:?} won!", winner)
         } else {
             format!(
                 "Player: {:?} | Clicks: {}",
