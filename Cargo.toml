@@ -2,6 +2,7 @@
 members = [
     "crates/klopodavka-lib",
     "crates/klopodavka-console",
+    "crates/klopodavka-wasm",
 ]
 
 [profile.release]
