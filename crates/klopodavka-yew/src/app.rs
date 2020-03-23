@@ -74,7 +74,7 @@ impl Component for App {
             <div>
                 <h1>{ "Klopodavka" }</h1>
                 <h3>{ status }</h3>
-                <button onclick=&self.make_move_click>{ "Make a move" }</button>
+                <p><button onclick=&self.make_move_click>{ "Make a move" }</button></p>
                 <table>
                     { (0.. BOARD_HEIGHT).map(|y| render_row(&self.game, y)).collect::<Html>() }
                 </table>

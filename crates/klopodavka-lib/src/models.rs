@@ -31,9 +31,9 @@ impl Tile {
     }
 }
 
-pub const BOARD_WIDTH: u16 = 8;
+pub const BOARD_WIDTH: u16 = 20;
 
-pub const BOARD_HEIGHT: u16 = 10;
+pub const BOARD_HEIGHT: u16 = 20;
 
 pub const BASE_OFFSET: u16 = 2;
 
