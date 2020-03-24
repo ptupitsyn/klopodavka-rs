@@ -11,6 +11,7 @@ branches:
 
 deploy:
   provider: pages
+  local_dir: crates/klopodavka-yew/publish  # TODO: Run build.sh.. but we don't have Node and Rollup!
   skip_cleanup: true
   github_token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
   keep_history: true
