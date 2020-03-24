@@ -266,8 +266,8 @@ mod tests {
         }
 
         assert_eq!(game.current_player, Player::Red);
-        assert_eq!(game.turn_length, 5);
-        assert_eq!(game.moves_left, 5);
+        assert_eq!(game.turn_length as u8, TURN_LENGTH);
+        assert_eq!(game.moves_left as u8, TURN_LENGTH);
 
         println!("{}", game);
     }
