@@ -8,6 +8,7 @@ fn main() {
 
     for _j in 1..10000 {
         let mut game = game::GameState::new();
+        game.disable_heat_map = true; // Affects performance a lot.
 
         for _i in 1.. {
             move_count += 1;

@@ -30,7 +30,7 @@ fn update_moves(game: &mut GameState) {
     game.moves
         .splice(0.., board::moves(&game.board, game.current_player));
 
-    // Reallocate map - faster (?) than clean and replace.
+    // Reallocate map - faster than clean/update.
     game.moves_map = [[false; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
 
     for pos in game.moves.iter() {
