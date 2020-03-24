@@ -27,6 +27,7 @@ fn heat_map_color(heat: u8, max_heat: u8) -> u8 {
 fn render_tile(app: &App, pos: Pos) -> Html {
     let tile = app.game.tile(pos);
 
+    // TODO: Render disconnected tiles in a different way.
     let (mut text, mut style) = match tile {
         Tile::Empty => {
             let heat = app.game.heat(pos);
