@@ -2,9 +2,11 @@
 
 wasm-pack build --target web
 
-cp ./www/main.js pkg
-
-rollup ./pkg/main.js --format iife --file ./publish/bundle.js
+if [ "$1" != "--skip-rollup" ]
+then
+  cp ./www/main.js pkg
+  rollup ./pkg/main.js --format iife --file ./publish/bundle.js
+fi
 
 cp ./pkg/*.wasm publish
 cp ./www/*.* publish
