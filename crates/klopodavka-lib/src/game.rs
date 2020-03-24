@@ -161,6 +161,8 @@ impl GameState {
 
         crate::board::make_move(&mut self.board, self.current_player, pos.x, pos.y);
 
+        update_heat_map_incrementally(&mut self.heat_map, pos, self.current_player);
+
         let last = self.moves_left == 1;
 
         let left = if last {
@@ -176,7 +178,6 @@ impl GameState {
         }
 
         update_moves(self);
-        update_heat_map_incrementally(&mut self.heat_map, pos, self.current_player.other());
     }
 }
 

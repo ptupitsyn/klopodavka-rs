@@ -33,7 +33,7 @@ fn render_tile(app: &App, pos: Pos) -> Html {
             if heat != (HeatMapTile { red: 0, blue: 0 }) {
                 let red = heat_map_color(heat.red, app.game.max_heat());
                 let blue = heat_map_color(heat.blue, app.game.max_heat());
-                let rgb = format!("background-color: rgb({}, 250, {})", red, blue);
+                let rgb = format!("background-color: rgb({}, 250, {})", blue, red);
 
                 ("", rgb)
             } else {
