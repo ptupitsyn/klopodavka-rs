@@ -6,7 +6,7 @@ fn main() {
 
     let mut move_count = 0;
 
-    for _j in 1..10000 {
+    for _j in 1..1000 {
         let mut game = game::GameState::new();
         game.disable_heat_map = true; // Affects performance a lot.
 

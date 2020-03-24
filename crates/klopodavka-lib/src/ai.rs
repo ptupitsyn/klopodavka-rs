@@ -26,6 +26,7 @@ fn advance_move(game: &GameState) -> Option<TilePos> {
 
     if !has_squashed {
         // Return random diagonal move when fight has not yet started.
+        // Note: this is quite slow.
         let moves: Vec<TilePos> = moves(game)
             .filter(|m| weight(game, m.pos, false) == 1)
             .collect();
