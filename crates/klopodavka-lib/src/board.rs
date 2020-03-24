@@ -13,6 +13,10 @@ pub fn base_pos(p: Player) -> Pos {
     }
 }
 
+pub fn pos_iter() -> impl Iterator<Item = (usize, usize)> {
+    (0..BOARD_WIDTH).flat_map(|x| (0..BOARD_HEIGHT).map(move |y| (x as usize, y as usize)))
+}
+
 pub fn create_board() -> Tiles {
     let mut res = [[Tile::Empty; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
 

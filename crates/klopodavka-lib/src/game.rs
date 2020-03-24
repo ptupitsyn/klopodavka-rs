@@ -72,6 +72,21 @@ fn update_heat_map_incrementally(map: &mut HeatMapTiles, pos: Pos, player: Playe
     }
 }
 
+fn update_heat_map_fully(game: &mut GameState, player: Player) {
+    let mut map = &mut game.heat_map;
+
+    for (x, y) in board::pos_iter() {
+        match player {
+            Player::Red => map[x][y].red = 0,
+            Player::Blue => map[x][y].blue = 0,
+        };
+    }
+
+    for connected_tile_pos in board::connected_tiles(&game.board, player, false) {
+        update_heat_map_incrementally(map, connected_tile_pos, player);
+    }
+}
+
 fn new_heat_map() -> HeatMapTiles {
     let mut res = [[HeatMapTile { blue: 0, red: 0 }; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
 
@@ -119,14 +134,15 @@ impl GameState {
     }
 
     pub fn tiles(&self) -> impl Iterator<Item = TilePos> + '_ {
-        (0..BOARD_WIDTH).flat_map(move |x| {
-            (0..BOARD_HEIGHT)
-                .map(move |y| Pos { x, y })
-                .map(move |pos| TilePos {
-                    pos,
-                    tile: self.tile(pos),
-                })
-        })
+        board::pos_iter()
+            .map(|(x, y)| Pos {
+                x: x as u16,
+                y: y as u16,
+            })
+            .map(move |pos| TilePos {
+                pos,
+                tile: self.tile(pos),
+            })
     }
 
     pub fn moves(&self) -> &Vec<Pos> {
@@ -159,10 +175,15 @@ impl GameState {
             panic!("Invalid move: {:?}", pos)
         }
 
-        crate::board::make_move(&mut self.board, self.current_player, pos.x, pos.y);
+        board::make_move(&mut self.board, self.current_player, pos.x, pos.y);
 
-        // TODO: Incremental update does not work for squash move!
         update_heat_map_incrementally(&mut self.heat_map, pos, self.current_player);
+
+        if self.tile(pos).is_squashed() {
+            // Squash move causes ownership change and possible branch disconnect,
+            // full recompute is required for the other player tiles.
+            update_heat_map_fully(self, self.current_player.other());
+        }
 
         let last = self.moves_left == 1;
 
