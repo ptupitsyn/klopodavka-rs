@@ -2,10 +2,9 @@
 
 wasm-pack build --target web
 
-cp ./main.js pkg
+cp ./www/main.js pkg
 
-cp pkg/*.wasm www
-cp pkg/*.js www
-cp ./main.js www
-cd www || exit
-rollup main.js --format iife --file bundle.js
+rollup ./pkg/main.js --format iife --file ./publish/bundle.js
+
+cp ./pkg/*.wasm publish
+cp ./www/*.* publish
