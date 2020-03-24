@@ -2,6 +2,16 @@ use crate::board;
 use crate::models::*;
 use std::fmt;
 
+pub type BoolTiles = [[bool; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+struct HeatMapTile {
+    red: u8,
+    blue: u8,
+}
+
+type HeatMapTiles = [[HeatMapTile; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
+
 pub struct GameState {
     board: Tiles,
     current_player: Player,
@@ -9,16 +19,18 @@ pub struct GameState {
     moves_left: u32,
     moves: Vec<Pos>,
     moves_map: BoolTiles,
+    heat_map: HeatMapTiles,
 }
 
-fn moves_map(moves: &[Pos]) -> BoolTiles {
-    let mut map = [[false; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
+fn update_moves_and_maps(game: &mut GameState) {
+    // TODO: Don't reallocate the vector.
+    game.moves = board::moves(&game.board, game.current_player);
 
-    for pos in moves.iter() {
-        map[pos.x as usize][pos.y as usize] = true;
+    game.moves_map = [[false; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
+
+    for pos in game.moves.iter() {
+        game.moves_map[pos.x as usize][pos.y as usize] = true;
     }
-
-    map
 }
 
 #[allow(clippy::new_without_default)]
@@ -26,17 +38,21 @@ impl GameState {
     pub fn new() -> Self {
         let tiles = board::create_board();
         let player = Player::Red;
-        let moves = board::moves(&tiles, player);
-        let moves_map = moves_map(&moves);
 
-        GameState {
+        let mut res = GameState {
             board: tiles,
             current_player: player,
             moves_left: 5,
             turn_length: 5,
-            moves_map,
-            moves,
-        }
+            moves_map: [[false; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize],
+            moves: Vec::with_capacity(64),
+            heat_map: [[HeatMapTile { blue: 0, red: 0 }; BOARD_HEIGHT as usize];
+                BOARD_WIDTH as usize],
+        };
+
+        update_moves_and_maps(&mut res);
+
+        res
     }
 
     pub fn tile(&self, pos: Pos) -> Tile {
@@ -100,8 +116,7 @@ impl GameState {
             self.current_player = self.current_player.other();
         }
 
-        self.moves = board::moves(&self.board, self.current_player);
-        self.moves_map = moves_map(&self.moves);
+        update_moves_and_maps(self);
     }
 }
 
