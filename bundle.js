@@ -399,12 +399,12 @@
         imports.wbg.__wbg_cargowebsnippet99c4eefdc8d4cc724135163b8c8665a1f3de99e4_14389f68322b60f1 = function(arg0, arg1, arg2, arg3, arg4) {
             __cargo_web_snippet_99c4eefdc8d4cc724135163b8c8665a1f3de99e4(takeObject(arg0), arg1, arg2, arg3, arg4);
         };
-        imports.wbg.__wbindgen_closure_wrapper294 = function(arg0, arg1, arg2) {
-            var ret = makeClosure(arg0, arg1, 24, __wbg_adapter_14);
+        imports.wbg.__wbindgen_closure_wrapper286 = function(arg0, arg1, arg2) {
+            var ret = makeClosure(arg0, arg1, 20, __wbg_adapter_14);
             return addHeapObject(ret);
         };
-        imports.wbg.__wbindgen_closure_wrapper295 = function(arg0, arg1, arg2) {
-            var ret = makeClosure(arg0, arg1, 27, __wbg_adapter_17);
+        imports.wbg.__wbindgen_closure_wrapper287 = function(arg0, arg1, arg2) {
+            var ret = makeClosure(arg0, arg1, 23, __wbg_adapter_17);
             return addHeapObject(ret);
         };
 
@@ -421,7 +421,7 @@
     }
 
     async function main() {
-       await init('./pkg/klopodavka_yew_bg.wasm');
+       await init('./klopodavka_yew_bg.wasm');
        run_app();
     }
     main();
