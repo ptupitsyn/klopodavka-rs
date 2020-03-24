@@ -135,8 +135,7 @@ impl Component for App {
 
         html! {
             <>
-                <img src="splash_screen.svg"
-                    alt="Logo" style="width: 640px"/>
+                <img src="logo.svg" alt="Logo" style="width: 640px"/>
 
                 <div>
                     <div style="float: right">
