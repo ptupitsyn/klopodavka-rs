@@ -8,8 +8,8 @@ pub type BoolTiles = [[bool; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct HeatMapTile {
-    red: u8,
-    blue: u8,
+    pub red: u8,
+    pub blue: u8,
 }
 
 type HeatMapTiles = [[HeatMapTile; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];

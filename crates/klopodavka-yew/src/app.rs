@@ -1,4 +1,4 @@
-use klopodavka_lib::game::GameState;
+use klopodavka_lib::game::{GameState, HeatMapTile};
 use klopodavka_lib::models::*;
 use klopodavka_lib::{ai, game};
 use yew::prelude::*;
@@ -20,7 +20,14 @@ fn render_tile(app: &App, pos: Pos) -> Html {
     let tile = app.game.tile(pos);
 
     let (mut text, style) = match tile {
-        Tile::Empty => ("", ""),
+        Tile::Empty => {
+            let heat = app.game.heat(pos);
+            if heat != (HeatMapTile { red: 0, blue: 0 }) {
+                ("", "background-color: #fafafa")
+            } else {
+                ("", "")
+            }
+        }
         Tile::Base(Player::Red) => ("🏠", "background-color: #ff9999"),
         Tile::Base(Player::Blue) => ("🏠", "background-color: #80b3ff"),
         Tile::Alive(Player::Red) => ("", "background-color: #ff9999"),
