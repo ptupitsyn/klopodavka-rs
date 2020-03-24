@@ -2,6 +2,8 @@ use crate::board;
 use crate::models::*;
 use std::fmt;
 
+pub const TURN_LENGTH: u8 = 6;
+
 pub type BoolTiles = [[bool; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -22,7 +24,7 @@ pub struct GameState {
     heat_map: HeatMapTiles,
 }
 
-fn update_moves_and_maps(game: &mut GameState) {
+fn update_moves(game: &mut GameState) {
     // Reuse existing vector.
     game.moves
         .splice(0.., board::moves(&game.board, game.current_player));
@@ -33,12 +35,36 @@ fn update_moves_and_maps(game: &mut GameState) {
     for pos in game.moves.iter() {
         game.moves_map[pos.x as usize][pos.y as usize] = true;
     }
+}
 
-    game.heat_map = new_heat_map();
+fn update_heat_map_incrementally(map: &mut HeatMapTiles, pos: Pos, player: Player) {
+    let (x, y) = (pos.x as usize, pos.y as usize);
+
+    let old = map[x][y];
+    let max_val = TURN_LENGTH;
+
+    map[x][y] = match player {
+        Player::Red => HeatMapTile {
+            blue: old.blue,
+            red: max_val + 1,
+        },
+        Player::Blue => HeatMapTile {
+            blue: max_val + 1,
+            red: old.red,
+        },
+    }
+
+    // TODO: Get neighbors, etc
+    // std::cmp::max()
 }
 
 fn new_heat_map() -> HeatMapTiles {
-    [[HeatMapTile { blue: 0, red: 0 }; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize]
+    let mut res = [[HeatMapTile { blue: 0, red: 0 }; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
+
+    update_heat_map_incrementally(&mut res, board::base_pos(Player::Red), Player::Red);
+    update_heat_map_incrementally(&mut res, board::base_pos(Player::Blue), Player::Blue);
+
+    res
 }
 
 fn new_moves_map() -> BoolTiles {
@@ -54,14 +80,14 @@ impl GameState {
         let mut res = GameState {
             board: tiles,
             current_player: player,
-            moves_left: 5,
-            turn_length: 5,
+            moves_left: TURN_LENGTH as u32,
+            turn_length: TURN_LENGTH as u32,
             moves_map: new_moves_map(),
             moves: Vec::with_capacity(64),
             heat_map: new_heat_map(),
         };
 
-        update_moves_and_maps(&mut res);
+        update_moves(&mut res);
 
         res
     }
@@ -127,7 +153,8 @@ impl GameState {
             self.current_player = self.current_player.other();
         }
 
-        update_moves_and_maps(self);
+        update_moves(self);
+        update_heat_map_incrementally(&mut self.heat_map, pos, self.current_player.other());
     }
 }
 
