@@ -42,9 +42,8 @@ pub fn neighbors(pos: Pos) -> impl Iterator<Item = Pos> + 'static {
     let (w, h) = (BOARD_WIDTH as i32, BOARD_HEIGHT as i32);
     let (_x, _y) = (pos.x as i32, pos.y as i32);
 
-    [-1, 0, 1]
-        .iter()
-        .flat_map(move |&a| [-1, 0, 1].iter().map(move |&b| (a + _x, b + _y)))
+    (-1..2)
+        .flat_map(move |a| (-1..2).map(move |b| (a + _x, b + _y)))
         .filter(move |&(a, b)| a >= 0 && b >= 0 && a < w && b < h && (a, b) != (_x, _y))
         .map(|(a, b)| Pos {
             x: a as u16,
