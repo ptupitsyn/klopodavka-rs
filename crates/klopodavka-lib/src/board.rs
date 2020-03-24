@@ -38,12 +38,19 @@ pub fn make_move(board: &mut Tiles, player: Player, x: u16, y: u16) {
     }
 }
 
-pub fn neighbors(pos: Pos) -> impl Iterator<Item = Pos> + 'static {
+pub fn neighbors(pos: Pos) -> impl Iterator<Item = Pos> {
+    neighbors_dist(pos, 1)
+}
+
+pub fn neighbors_dist(pos: Pos, dist: u8) -> impl Iterator<Item = Pos> + 'static {
     let (w, h) = (BOARD_WIDTH as i32, BOARD_HEIGHT as i32);
     let (_x, _y) = (pos.x as i32, pos.y as i32);
+    let n = dist as i32;
+    let range = -n..n + 1;
 
-    (-1..2)
-        .flat_map(move |a| (-1..2).map(move |b| (a + _x, b + _y)))
+    range
+        .clone()
+        .flat_map(move |a| range.clone().map(move |b| (a + _x, b + _y)))
         .filter(move |&(a, b)| a >= 0 && b >= 0 && a < w && b < h && (a, b) != (_x, _y))
         .map(|(a, b)| Pos {
             x: a as u16,
