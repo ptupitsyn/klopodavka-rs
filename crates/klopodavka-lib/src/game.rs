@@ -52,10 +52,23 @@ fn update_heat_map_incrementally(map: &mut HeatMapTiles, pos: Pos, player: Playe
             blue: max_val + 1,
             red: old.red,
         },
-    }
+    };
 
-    // TODO: Get neighbors, etc
-    // std::cmp::max()
+    for pos2 in board::neighbors_dist(pos, max_val) {
+        let (x, y) = (pos2.x as usize, pos2.y as usize);
+        let heat = max_val + 1 - board::dist(pos, pos2) as u8;
+
+        map[x][y] = match player {
+            Player::Red => HeatMapTile {
+                blue: old.blue,
+                red: heat,
+            },
+            Player::Blue => HeatMapTile {
+                blue: heat,
+                red: old.red,
+            },
+        };
+    }
 }
 
 fn new_heat_map() -> HeatMapTiles {
