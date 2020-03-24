@@ -59,6 +59,14 @@ pub fn neighbors_dist(pos: Pos, dist: u8) -> impl Iterator<Item = Pos> + 'static
 }
 
 pub fn moves(board: &Tiles, player: Player) -> impl Iterator<Item = Pos> + '_ {
+    connected_tiles(board, player, true)
+}
+
+pub fn connected_tiles(
+    board: &Tiles,
+    player: Player,
+    return_potential_moves: bool,
+) -> impl Iterator<Item = Pos> + '_ {
     let mut visited = [[false; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
     let mut stack = Vec::new();
     stack.push(base_pos(player));
@@ -75,13 +83,19 @@ pub fn moves(board: &Tiles, player: Player) -> impl Iterator<Item = Pos> + '_ {
                 let tile = board[x][y];
 
                 if tile == Tile::Empty || tile == Tile::Alive(enemy) {
-                    return Some(pos);
+                    if return_potential_moves {
+                        return Some(pos);
+                    }
                 } else if tile == Tile::Base(player)
                     || tile == Tile::Squashed(player)
                     || tile == Tile::Alive(player)
                 {
                     for neighbor in neighbors(pos) {
                         stack.push(neighbor);
+                    }
+
+                    if !return_potential_moves {
+                        return Some(pos);
                     }
                 }
             }

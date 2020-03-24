@@ -121,6 +121,7 @@ impl Component for App {
                 game_state.make_move(pos);
 
                 // Perform AI moves if current player is AI (Blue).
+                // TODO: Perform AI moves on a timer instead, for "animated" look.
                 while game_state.current_player() == Player::Blue {
                     match ai::get_ai_move(game_state) {
                         Some(tile) => {
