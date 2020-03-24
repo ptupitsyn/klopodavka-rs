@@ -1,4 +1,4 @@
-use klopodavka_lib::game::GameState;
+use klopodavka_lib::game::{GameState, HeatMapTile};
 use klopodavka_lib::models::*;
 use klopodavka_lib::{ai, game};
 use yew::prelude::*;
@@ -16,29 +16,47 @@ pub enum Msg {
     NewGame,
 }
 
+fn heat_map_color(heat: u8, max_heat: u8) -> u8 {
+    let base_color: u8 = 230;
+    let max_color: u8 = 250;
+    let color_range = (max_color - base_color) as f32;
+
+    max_color - (heat as f32 / max_heat as f32 * color_range) as u8
+}
+
 fn render_tile(app: &App, pos: Pos) -> Html {
     let tile = app.game.tile(pos);
 
-    let (mut text, style) = match tile {
-        Tile::Empty => ("", ""),
-        Tile::Base(Player::Red) => ("🏠", "background-color: #ff9999"),
-        Tile::Base(Player::Blue) => ("🏠", "background-color: #80b3ff"),
-        Tile::Alive(Player::Red) => ("", "background-color: #ff9999"),
-        Tile::Alive(Player::Blue) => ("", "background-color: #80b3ff"),
-        Tile::Squashed(Player::Red) => ("", "background-color: #cc0000"),
-        Tile::Squashed(Player::Blue) => ("", "background-color: #005ce6"),
+    // TODO: Render disconnected tiles in a different way.
+    let (mut text, mut style) = match tile {
+        Tile::Empty => {
+            let heat = app.game.heat(pos);
+            if heat != (HeatMapTile { red: 0, blue: 0 }) {
+                let red = heat_map_color(heat.red, app.game.max_heat());
+                let blue = heat_map_color(heat.blue, app.game.max_heat());
+                let rgb = format!("background-color: rgb({}, 250, {})", blue, red);
+
+                ("", rgb)
+            } else {
+                ("", "".to_string())
+            }
+        }
+        Tile::Base(Player::Red) => ("🏠", "background-color: #ff9999".to_string()),
+        Tile::Base(Player::Blue) => ("🏠", "background-color: #80b3ff".to_string()),
+        Tile::Alive(Player::Red) => ("", "background-color: #ff9999".to_string()),
+        Tile::Alive(Player::Blue) => ("", "background-color: #80b3ff".to_string()),
+        Tile::Squashed(Player::Red) => ("", "background-color: #cc0000".to_string()),
+        Tile::Squashed(Player::Blue) => ("", "background-color: #005ce6".to_string()),
     };
 
-    // TODO: Inefficient check, use a two-dim array instead for O(1) check
-    if app.game.moves().contains(&pos) {
+    if app.game.is_valid_move(pos) {
         text = "·";
 
-        let mut style = style.to_string();
         style.push_str("; cursor: pointer");
 
         render_tile_avail(text, style.as_str(), app, pos)
     } else {
-        render_tile_nonavail(text, style)
+        render_tile_nonavail(text, style.as_str())
     }
 }
 
@@ -101,6 +119,18 @@ impl Component for App {
             },
             Msg::MakeMove(pos) => {
                 game_state.make_move(pos);
+
+                // Perform AI moves if current player is AI (Blue).
+                // TODO: Perform AI moves on a timer instead, for "animated" look.
+                while game_state.current_player() == Player::Blue {
+                    match ai::get_ai_move(game_state) {
+                        Some(tile) => {
+                            game_state.make_move(tile.pos);
+                        }
+                        None => break,
+                    }
+                }
+
                 true
             }
             Msg::NewGame => {
@@ -111,15 +141,21 @@ impl Component for App {
     }
 
     fn view(&self) -> Html {
-        let status = format!(
-            "Player: {:?} | Clicks: {}",
-            &self.game.current_player(),
-            &self.game.moves_left()
-        );
+        let g = &self.game;
+
+        let status = if let Some(winner) = g.winner() {
+            format!("Game over, {:?} won!", winner)
+        } else {
+            format!(
+                "Player: {:?} | Clicks: {}",
+                g.current_player(),
+                g.moves_left()
+            )
+        };
 
         html! {
             <>
-                <img src="https://raw.githubusercontent.com/ptupitsyn/klopodavka/master/website/pic/klopodavka.jpg" alt="Logo" style="width: 640px"/>
+                <img src="logo.svg" alt="Logo" style="width: 640px"/>
 
                 <div>
                     <div style="float: right">

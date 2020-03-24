@@ -1,14 +1,24 @@
 use klopodavka_lib::{ai, game};
 
 fn main() {
-    let mut game = game::GameState::new();
+    // This console app is mainly for perf profiling:
+    // cargo flamegraph --bin klopodavka-console
 
-    for _i in 1..20 {
-        match ai::get_ai_move(&game) {
-            Some(tile) => game.make_move(tile.pos),
-            None => break,
+    let mut move_count = 0;
+
+    for _j in 1..1000 {
+        let mut game = game::GameState::new();
+        game.disable_heat_map = true; // Affects performance a lot.
+
+        for _i in 1.. {
+            move_count += 1;
+
+            match ai::get_ai_move(&game) {
+                Some(tile) => game.make_move(tile.pos),
+                None => break,
+            }
         }
     }
 
-    println!("{}", game);
+    println!("Total moves: {}", move_count);
 }

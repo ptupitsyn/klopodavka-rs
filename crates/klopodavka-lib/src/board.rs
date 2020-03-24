@@ -13,6 +13,10 @@ pub fn base_pos(p: Player) -> Pos {
     }
 }
 
+pub fn pos_iter() -> impl Iterator<Item = (usize, usize)> {
+    (0..BOARD_WIDTH).flat_map(|x| (0..BOARD_HEIGHT).map(move |y| (x as usize, y as usize)))
+}
+
 pub fn create_board() -> Tiles {
     let mut res = [[Tile::Empty; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
 
@@ -38,55 +42,79 @@ pub fn make_move(board: &mut Tiles, player: Player, x: u16, y: u16) {
     }
 }
 
-pub fn neighbors(pos: Pos) -> Vec<Pos> {
+pub fn neighbors(pos: Pos) -> impl Iterator<Item = Pos> {
+    neighbors_dist(pos, 1)
+}
+
+pub fn neighbors_dist(pos: Pos, dist: u8) -> impl Iterator<Item = Pos> + 'static {
     let (w, h) = (BOARD_WIDTH as i32, BOARD_HEIGHT as i32);
     let (_x, _y) = (pos.x as i32, pos.y as i32);
+    let n = dist as i32;
+    let range = -n..n + 1;
 
-    let offs: [i32; 3] = [-1, 0, 1];
-
-    offs.iter()
-        .flat_map(|&a| offs.iter().map(move |&b| (a + _x, b + _y)))
-        .filter(|&(a, b)| a >= 0 && b >= 0 && a < w && b < h && (a, b) != (_x, _y))
+    range
+        .clone()
+        .flat_map(move |a| range.clone().map(move |b| (a + _x, b + _y)))
+        .filter(move |&(a, b)| a >= 0 && b >= 0 && a < w && b < h && (a, b) != (_x, _y))
         .map(|(a, b)| Pos {
             x: a as u16,
             y: b as u16,
         })
-        .collect()
 }
 
-pub fn moves(board: &Tiles, player: Player) -> Vec<Pos> {
-    let mut res: Vec<Pos> = Vec::new();
+pub fn moves(board: &Tiles, player: Player) -> impl Iterator<Item = Pos> + '_ {
+    connected_tiles(board, player, true)
+}
+
+pub fn connected_tiles(
+    board: &Tiles,
+    player: Player,
+    return_potential_moves: bool,
+) -> impl Iterator<Item = Pos> + '_ {
     let mut visited = [[false; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
     let mut stack = Vec::new();
     stack.push(base_pos(player));
     let enemy = player.other();
 
-    loop {
-        match stack.pop() {
-            None => break,
-            Some(pos) => {
-                let (x, y) = (pos.x as usize, pos.y as usize);
-                if !(visited[x][y]) {
-                    visited[x][y] = true;
+    // Traverse the tree of connected tiles and return all reachable empty tiles.
+    std::iter::from_fn(move || {
+        while let Some(pos) = stack.pop() {
+            let (x, y) = (pos.x as usize, pos.y as usize);
 
-                    let tile = board[x][y];
+            if !(visited[x][y]) {
+                visited[x][y] = true;
 
-                    if tile == Tile::Empty || tile == Tile::Alive(enemy) {
-                        res.push(pos);
-                    } else if tile == Tile::Base(player)
-                        || tile == Tile::Squashed(player)
-                        || tile == Tile::Alive(player)
-                    {
-                        for neighbor in neighbors(pos) {
-                            stack.push(neighbor);
-                        }
+                let tile = board[x][y];
+
+                if tile == Tile::Empty || tile == Tile::Alive(enemy) {
+                    if return_potential_moves {
+                        return Some(pos);
+                    }
+                } else if tile == Tile::Base(player)
+                    || tile == Tile::Squashed(player)
+                    || tile == Tile::Alive(player)
+                {
+                    for neighbor in neighbors(pos) {
+                        stack.push(neighbor);
+                    }
+
+                    if !return_potential_moves {
+                        return Some(pos);
                     }
                 }
             }
         }
-    }
 
-    res
+        None
+    })
+}
+
+pub fn dist(a: Pos, b: Pos) -> u16 {
+    let dx = (a.x as i16 - b.x as i16).abs();
+    let dy = (a.y as i16 - b.y as i16).abs();
+
+    // Because diagonal moves are allowed, distance is max of two.
+    std::cmp::max(dx, dy) as u16
 }
 
 #[cfg(test)]
@@ -162,7 +190,7 @@ mod tests {
     fn neighbors_returns_8_tiles_for_mid_board() {
         let x = 3;
         let y = 5;
-        let res = neighbors(Pos { x, y });
+        let res: Vec<Pos> = neighbors(Pos { x, y }).collect();
 
         println!("{:?}", res);
         assert_eq!(res.len(), 8);
@@ -177,7 +205,7 @@ mod tests {
 
     #[test]
     fn neighbors_returns_3_tiles_for_corner() {
-        let res = neighbors(Pos { x: 0, y: 0 });
+        let res: Vec<Pos> = neighbors(Pos { x: 0, y: 0 }).collect();
 
         println!("{:?}", res);
         assert_eq!(res.len(), 3);
@@ -193,10 +221,10 @@ mod tests {
     #[test]
     fn moves_returns_base_neighbors_for_new_board() {
         let board = create_board();
-        let res = moves(&board, Player::Red);
+        let res: Vec<Pos> = moves(&board, Player::Red).collect();
 
         let base = base_pos(Player::Red);
-        let mut expected = neighbors(base);
+        let mut expected: Vec<Pos> = neighbors(base).collect();
         expected.reverse();
 
         println!("{:?}", res);
@@ -211,10 +239,18 @@ mod tests {
         make_move(&mut board, Player::Red, bx + 1, by - 1);
         make_move(&mut board, Player::Red, bx + 2, by - 2);
 
-        let res = moves(&board, Player::Red);
+        let res: Vec<Pos> = moves(&board, Player::Red).collect();
 
         assert!(res.contains(&Pos::new(bx + 3, by - 3)));
         assert!(res.contains(&Pos::new(bx + 2, by - 3)));
         assert!(res.contains(&Pos::new(bx + 1, by - 3)));
+    }
+
+    #[test]
+    fn dist_returns_number_of_moves_to_connect_tiles() {
+        assert_eq!(dist(Pos { x: 1, y: 1 }, Pos { x: 1, y: 1 }), 0);
+        assert_eq!(dist(Pos { x: 1, y: 1 }, Pos { x: 1, y: 2 }), 1);
+        assert_eq!(dist(Pos { x: 1, y: 1 }, Pos { x: 2, y: 2 }), 1);
+        assert_eq!(dist(Pos { x: 1, y: 1 }, Pos { x: 2, y: 1 }), 1);
     }
 }

@@ -26,6 +26,10 @@ impl Tile {
         matches!(self, Tile::Alive(_))
     }
 
+    pub fn is_squashed(self) -> bool {
+        matches!(self, Tile::Squashed(_))
+    }
+
     pub fn is_empty(self) -> bool {
         matches!(self, Tile::Empty)
     }
