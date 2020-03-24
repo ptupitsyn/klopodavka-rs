@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 wasm-pack build --target web
 
 if [ "$1" != "--skip-rollup" ]

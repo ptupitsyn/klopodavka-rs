@@ -2,10 +2,11 @@ language: rust
 cache: cargo
 before_script:
   - rustup component add clippy
+  - curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 script:
   - cargo clippy -- -D warnings
   - cargo test
-  - cd ./crates/klopodavka-yew/ && ./build.sh
+  - cd ./crates/klopodavka-yew/ && ./build.sh --skip-rollup
 
 branches:
   only:
