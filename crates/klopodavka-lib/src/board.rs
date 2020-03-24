@@ -42,49 +42,47 @@ pub fn neighbors(pos: Pos) -> impl Iterator<Item = Pos> + 'static {
     let (w, h) = (BOARD_WIDTH as i32, BOARD_HEIGHT as i32);
     let (_x, _y) = (pos.x as i32, pos.y as i32);
 
-    [-1, 0, 1].iter()
-        .flat_map(move|&a| [-1, 0, 1].iter().map(move |&b| (a + _x, b + _y)))
-        .filter(move|&(a, b)| a >= 0 && b >= 0 && a < w && b < h && (a, b) != (_x, _y))
+    [-1, 0, 1]
+        .iter()
+        .flat_map(move |&a| [-1, 0, 1].iter().map(move |&b| (a + _x, b + _y)))
+        .filter(move |&(a, b)| a >= 0 && b >= 0 && a < w && b < h && (a, b) != (_x, _y))
         .map(|(a, b)| Pos {
             x: a as u16,
             y: b as u16,
         })
 }
 
-pub fn moves(board: &Tiles, player: Player) -> Vec<Pos> {
-    let mut res: Vec<Pos> = Vec::new();
+pub fn moves(board: &Tiles, player: Player) -> impl Iterator<Item = Pos> + '_ {
     let mut visited = [[false; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
     let mut stack = Vec::new();
     stack.push(base_pos(player));
     let enemy = player.other();
 
     // Traverse the tree of connected tiles and return all reachable empty tiles.
-    loop {
-        match stack.pop() {
-            None => break,
-            Some(pos) => {
-                let (x, y) = (pos.x as usize, pos.y as usize);
-                if !(visited[x][y]) {
-                    visited[x][y] = true;
+    std::iter::from_fn(move || {
+        while let Some(pos) = stack.pop() {
+            let (x, y) = (pos.x as usize, pos.y as usize);
 
-                    let tile = board[x][y];
+            if !(visited[x][y]) {
+                visited[x][y] = true;
 
-                    if tile == Tile::Empty || tile == Tile::Alive(enemy) {
-                        res.push(pos);
-                    } else if tile == Tile::Base(player)
-                        || tile == Tile::Squashed(player)
-                        || tile == Tile::Alive(player)
-                    {
-                        for neighbor in neighbors(pos) {
-                            stack.push(neighbor);
-                        }
+                let tile = board[x][y];
+
+                if tile == Tile::Empty || tile == Tile::Alive(enemy) {
+                    return Some(pos);
+                } else if tile == Tile::Base(player)
+                    || tile == Tile::Squashed(player)
+                    || tile == Tile::Alive(player)
+                {
+                    for neighbor in neighbors(pos) {
+                        stack.push(neighbor);
                     }
                 }
             }
         }
-    }
 
-    res
+        None
+    })
 }
 
 #[cfg(test)]
@@ -191,7 +189,7 @@ mod tests {
     #[test]
     fn moves_returns_base_neighbors_for_new_board() {
         let board = create_board();
-        let res = moves(&board, Player::Red);
+        let res: Vec<Pos> = moves(&board, Player::Red).collect();
 
         let base = base_pos(Player::Red);
         let mut expected: Vec<Pos> = neighbors(base).collect();
@@ -209,7 +207,7 @@ mod tests {
         make_move(&mut board, Player::Red, bx + 1, by - 1);
         make_move(&mut board, Player::Red, bx + 2, by - 2);
 
-        let res = moves(&board, Player::Red);
+        let res: Vec<Pos> = moves(&board, Player::Red).collect();
 
         assert!(res.contains(&Pos::new(bx + 3, by - 3)));
         assert!(res.contains(&Pos::new(bx + 2, by - 3)));

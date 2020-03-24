@@ -23,9 +23,11 @@ pub struct GameState {
 }
 
 fn update_moves_and_maps(game: &mut GameState) {
-    // TODO: Don't reallocate the vector.
-    game.moves = board::moves(&game.board, game.current_player);
+    // Reuse existing vector.
+    game.moves
+        .splice(0.., board::moves(&game.board, game.current_player));
 
+    // Reallocate map - faster (?) than clean and replace.
     game.moves_map = [[false; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
 
     for pos in game.moves.iter() {
