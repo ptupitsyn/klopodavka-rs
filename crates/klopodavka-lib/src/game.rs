@@ -22,6 +22,7 @@ pub struct GameState {
     moves: Vec<Pos>,
     moves_map: BoolTiles,
     heat_map: HeatMapTiles,
+    pub disable_heat_map: bool,
 }
 
 fn update_moves(game: &mut GameState) {
@@ -114,6 +115,7 @@ impl GameState {
             moves_map: new_moves_map(),
             moves: Vec::with_capacity(64),
             heat_map: new_heat_map(),
+            disable_heat_map: false,
         };
 
         update_moves(&mut res);
@@ -177,12 +179,14 @@ impl GameState {
 
         board::make_move(&mut self.board, self.current_player, pos.x, pos.y);
 
-        update_heat_map_incrementally(&mut self.heat_map, pos, self.current_player);
+        if !self.disable_heat_map {
+            update_heat_map_incrementally(&mut self.heat_map, pos, self.current_player);
 
-        if self.tile(pos).is_squashed() {
-            // Squash move causes ownership change and possible branch disconnect,
-            // full recompute is required for the other player tiles.
-            update_heat_map_fully(self, self.current_player.other());
+            if self.tile(pos).is_squashed() {
+                // Squash move causes ownership change and possible branch disconnect,
+                // full recompute is required for the other player tiles.
+                update_heat_map_fully(self, self.current_player.other());
+            }
         }
 
         let last = self.moves_left == 1;
@@ -306,6 +310,7 @@ mod tests {
     #[test]
     fn make_random_move_fills_board_until_finished() {
         let mut game = GameState::new();
+        game.disable_heat_map = true; // Reduce overhead: this test is heavy.
         let mut move_count = 0;
 
         loop {
