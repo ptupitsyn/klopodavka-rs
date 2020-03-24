@@ -1,7 +1,6 @@
 use crate::board;
 use crate::game::GameState;
 use crate::models::{Pos, TilePos};
-use std::i16;
 
 pub fn moves(game: &GameState) -> impl Iterator<Item = TilePos> + '_ {
     game.moves().iter().map(move |&pos| TilePos {
@@ -66,7 +65,7 @@ fn weight(game: &GameState, pos: Pos, include_base_dist: bool) -> u16 {
     // TODO: Base positions should be saved within GameState
     let base_dist = if include_base_dist {
         let enemy_base = board::base_pos(game.current_player().other());
-        dist(enemy_base, pos)
+        board::dist(enemy_base, pos)
     } else {
         0
     };
@@ -74,14 +73,6 @@ fn weight(game: &GameState, pos: Pos, include_base_dist: bool) -> u16 {
     let weight = diag_neighbs + nondiag_neighbs * 2 + base_dist as usize;
 
     weight as u16
-}
-
-fn dist(a: Pos, b: Pos) -> u16 {
-    let dx = (a.x as i16 - b.x as i16).abs();
-    let dy = (a.y as i16 - b.y as i16).abs();
-
-    // Because diagonal moves are allowed, distance is max of two.
-    std::cmp::max(dx, dy) as u16
 }
 
 #[cfg(test)]

@@ -91,6 +91,14 @@ pub fn moves(board: &Tiles, player: Player) -> impl Iterator<Item = Pos> + '_ {
     })
 }
 
+pub fn dist(a: Pos, b: Pos) -> u16 {
+    let dx = (a.x as i16 - b.x as i16).abs();
+    let dy = (a.y as i16 - b.y as i16).abs();
+
+    // Because diagonal moves are allowed, distance is max of two.
+    std::cmp::max(dx, dy) as u16
+}
+
 #[cfg(test)]
 mod tests {
     use crate::board::*;
@@ -218,5 +226,13 @@ mod tests {
         assert!(res.contains(&Pos::new(bx + 3, by - 3)));
         assert!(res.contains(&Pos::new(bx + 2, by - 3)));
         assert!(res.contains(&Pos::new(bx + 1, by - 3)));
+    }
+
+    #[test]
+    fn dist_returns_number_of_moves_to_connect_tiles() {
+        assert_eq!(dist(Pos { x: 1, y: 1 }, Pos { x: 1, y: 1 }), 0);
+        assert_eq!(dist(Pos { x: 1, y: 1 }, Pos { x: 1, y: 2 }), 1);
+        assert_eq!(dist(Pos { x: 1, y: 1 }, Pos { x: 2, y: 2 }), 1);
+        assert_eq!(dist(Pos { x: 1, y: 1 }, Pos { x: 2, y: 1 }), 1);
     }
 }
