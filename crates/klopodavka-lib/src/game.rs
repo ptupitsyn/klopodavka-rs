@@ -33,6 +33,16 @@ fn update_moves_and_maps(game: &mut GameState) {
     for pos in game.moves.iter() {
         game.moves_map[pos.x as usize][pos.y as usize] = true;
     }
+
+    game.heat_map = new_heat_map();
+}
+
+fn new_heat_map() -> HeatMapTiles {
+    [[HeatMapTile { blue: 0, red: 0 }; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize]
+}
+
+fn new_moves_map() -> BoolTiles {
+    [[false; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize]
 }
 
 #[allow(clippy::new_without_default)]
@@ -46,10 +56,9 @@ impl GameState {
             current_player: player,
             moves_left: 5,
             turn_length: 5,
-            moves_map: [[false; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize],
+            moves_map: new_moves_map(),
             moves: Vec::with_capacity(64),
-            heat_map: [[HeatMapTile { blue: 0, red: 0 }; BOARD_HEIGHT as usize];
-                BOARD_WIDTH as usize],
+            heat_map: new_heat_map(),
         };
 
         update_moves_and_maps(&mut res);
