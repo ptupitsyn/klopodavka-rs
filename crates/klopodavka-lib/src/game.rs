@@ -7,7 +7,7 @@ pub const TURN_LENGTH: u8 = 6;
 pub type BoolTiles = [[bool; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
 
 #[derive(Debug, Copy, Clone, PartialEq)]
-struct HeatMapTile {
+pub struct HeatMapTile {
     red: u8,
     blue: u8,
 }
@@ -109,6 +109,10 @@ impl GameState {
         self.board[pos.x as usize][pos.y as usize]
     }
 
+    pub fn heat(&self, pos: Pos) -> HeatMapTile {
+        self.heat_map[pos.x as usize][pos.y as usize]
+    }
+
     pub fn tiles(&self) -> impl Iterator<Item = TilePos> + '_ {
         (0..BOARD_WIDTH).flat_map(move |x| {
             (0..BOARD_HEIGHT)
@@ -208,7 +212,8 @@ impl std::fmt::Display for GameState {
 #[cfg(test)]
 mod tests {
     use crate::board;
-    use crate::game::GameState;
+    use crate::board::base_pos;
+    use crate::game::{GameState, TURN_LENGTH};
     use crate::models::Tile::Alive;
     use crate::models::{Player, Pos, Tile};
     use rand::seq::SliceRandom;
@@ -285,5 +290,51 @@ mod tests {
 
         println!("Total moves: {}", move_count);
         println!("{}", game);
+    }
+
+    #[test]
+    fn create_game_returns_new_game_state_with_heat_map() {
+        let game = GameState::new();
+        let pos = base_pos(Player::Red);
+
+        assert_eq!(game.heat(pos).red, (TURN_LENGTH + 1) as u8);
+
+        assert_eq!(game.heat(pos).blue, 0);
+
+        assert_eq!(
+            game.heat(Pos {
+                x: pos.x + 1,
+                y: pos.y
+            })
+            .red,
+            TURN_LENGTH as u8
+        );
+
+        assert_eq!(
+            game.heat(Pos {
+                x: pos.x + 2,
+                y: pos.y
+            })
+            .red,
+            (TURN_LENGTH - 1) as u8
+        );
+
+        assert_eq!(
+            game.heat(Pos {
+                x: pos.x + TURN_LENGTH as u16,
+                y: pos.y
+            })
+            .red,
+            1
+        );
+
+        assert_eq!(
+            game.heat(Pos {
+                x: pos.x + TURN_LENGTH as u16 + 1,
+                y: pos.y
+            })
+            .red,
+            0
+        );
     }
 }
