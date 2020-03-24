@@ -16,35 +16,46 @@ pub enum Msg {
     NewGame,
 }
 
+fn heat_map_color(heat: u8, max_heat: u8) -> u8 {
+    let base_color: u8 = 230;
+    let max_color: u8 = 250;
+    let color_range = (max_color - base_color) as f32;
+
+    max_color - (heat as f32 / max_heat as f32 * color_range) as u8
+}
+
 fn render_tile(app: &App, pos: Pos) -> Html {
     let tile = app.game.tile(pos);
 
-    let (mut text, style) = match tile {
+    let (mut text, mut style) = match tile {
         Tile::Empty => {
             let heat = app.game.heat(pos);
             if heat != (HeatMapTile { red: 0, blue: 0 }) {
-                ("", "background-color: #fafafa")
+                let red = heat_map_color(heat.red, app.game.max_heat());
+                let blue = heat_map_color(heat.red, app.game.max_heat());
+                let rgb = format!("background-color: #rgb({}, 250, {})", red, blue);
+
+                ("", rgb)
             } else {
-                ("", "")
+                ("", "".to_string())
             }
         }
-        Tile::Base(Player::Red) => ("🏠", "background-color: #ff9999"),
-        Tile::Base(Player::Blue) => ("🏠", "background-color: #80b3ff"),
-        Tile::Alive(Player::Red) => ("", "background-color: #ff9999"),
-        Tile::Alive(Player::Blue) => ("", "background-color: #80b3ff"),
-        Tile::Squashed(Player::Red) => ("", "background-color: #cc0000"),
-        Tile::Squashed(Player::Blue) => ("", "background-color: #005ce6"),
+        Tile::Base(Player::Red) => ("🏠", "background-color: #ff9999".to_string()),
+        Tile::Base(Player::Blue) => ("🏠", "background-color: #80b3ff".to_string()),
+        Tile::Alive(Player::Red) => ("", "background-color: #ff9999".to_string()),
+        Tile::Alive(Player::Blue) => ("", "background-color: #80b3ff".to_string()),
+        Tile::Squashed(Player::Red) => ("", "background-color: #cc0000".to_string()),
+        Tile::Squashed(Player::Blue) => ("", "background-color: #005ce6".to_string()),
     };
 
     if app.game.is_valid_move(pos) {
         text = "·";
 
-        let mut style = style.to_string();
         style.push_str("; cursor: pointer");
 
         render_tile_avail(text, style.as_str(), app, pos)
     } else {
-        render_tile_nonavail(text, style)
+        render_tile_nonavail(text, style.as_str())
     }
 }
 

@@ -113,6 +113,10 @@ impl GameState {
         self.heat_map[pos.x as usize][pos.y as usize]
     }
 
+    pub fn max_heat(&self) -> u8 {
+        self.turn_length as u8
+    }
+
     pub fn tiles(&self) -> impl Iterator<Item = TilePos> + '_ {
         (0..BOARD_WIDTH).flat_map(move |x| {
             (0..BOARD_HEIGHT)
