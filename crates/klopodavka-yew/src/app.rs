@@ -135,7 +135,8 @@ impl Component for App {
 
         html! {
             <>
-                <img src="https://raw.githubusercontent.com/ptupitsyn/klopodavka/master/website/pic/klopodavka.jpg" alt="Logo" style="width: 640px"/>
+                <img src="splash_screen.svg"
+                    alt="Logo" style="width: 640px"/>
 
                 <div>
                     <div style="float: right">
