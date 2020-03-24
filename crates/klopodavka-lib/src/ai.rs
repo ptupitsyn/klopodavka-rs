@@ -80,7 +80,8 @@ fn dist(a: Pos, b: Pos) -> u16 {
     let dx = (a.x as i16 - b.x as i16).abs();
     let dy = (a.y as i16 - b.y as i16).abs();
 
-    (dx + dy) as u16
+    // Because diagonal moves are allowed, distance is max of two.
+    std::cmp::max(dx, dy) as u16
 }
 
 #[cfg(test)]
