@@ -1,17 +1,24 @@
 use klopodavka_lib::game::{GameState, HeatMapTile};
 use klopodavka_lib::models::*;
 use klopodavka_lib::{ai, game};
+use std::time::Duration;
 use yew::prelude::*;
+use yew::services::{ConsoleService, IntervalService, Task};
 
 pub struct App {
     new_game_click: Callback<ClickEvent>,
     cell_click: Vec<Vec<Callback<ClickEvent>>>,
     game: GameState,
+    interval: IntervalService,
+    console: ConsoleService,
+    callback_tick: Callback<()>,
+    tick_handle: Box<dyn Task>,
 }
 
 pub enum Msg {
     MakeMove(Pos),
     NewGame,
+    Tick,
 }
 
 fn heat_map_color(heat: u8, max_heat: u8) -> u8 {
@@ -90,8 +97,14 @@ impl Component for App {
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let mut interval = IntervalService::new();
+        let callback_tick = link.callback(|_| Msg::Tick);
+        let handle = interval.spawn(Duration::from_millis(300), callback_tick.clone());
+        let tick_handle = Box::new(handle);
+
         App {
             game: game::GameState::new(),
+            interval,
             cell_click: (0..BOARD_WIDTH)
                 .map(|x| {
                     (0..BOARD_HEIGHT)
@@ -100,6 +113,9 @@ impl Component for App {
                 })
                 .collect(),
             new_game_click: link.callback(|_| Msg::NewGame),
+            console: ConsoleService::new(),
+            callback_tick,
+            tick_handle,
         }
     }
 
@@ -108,24 +124,29 @@ impl Component for App {
 
         match msg {
             Msg::MakeMove(pos) => {
-                game_state.make_move(pos);
+                if game_state.current_player() == Player::Red {
+                    game_state.make_move(pos);
+                    true
+                } else {
+                    false
+                }
+            }
 
-                // Perform AI moves if current player is AI (Blue).
-                // TODO: Perform AI moves on a timer instead, for "animated" look.
-                while game_state.current_player() == Player::Blue {
-                    match ai::get_ai_move(game_state) {
-                        Some(tile) => {
-                            game_state.make_move(tile.pos);
-                        }
-                        None => break,
+            Msg::NewGame => {
+                self.console.info("New game");
+                self.game = game::GameState::new();
+                true
+            }
+
+            Msg::Tick => {
+                if game_state.current_player() == Player::Blue {
+                    if let Some(m) = ai::get_ai_move(game_state) {
+                        game_state.make_move(m.pos);
+                        return true;
                     }
                 }
 
-                true
-            }
-            Msg::NewGame => {
-                self.game = game::GameState::new();
-                true
+                false
             }
         }
     }
