@@ -12,11 +12,11 @@ branches:
   only:
     - master
 
-deploy:
-  provider: pages
-  local_dir: crates/klopodavka-yew/publish
-  skip_cleanup: true
-  github_token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
-  keep_history: true
-  on:
-    branch: master
+# deploy:
+#  provider: pages
+#  local_dir: crates/klopodavka-yew/publish
+#  skip_cleanup: true
+#  github_token: $GITHUB_TOKEN  # Set in the settings page of your repository, as a secure variable
+#  keep_history: true
+#  on:
+#    branch: master
