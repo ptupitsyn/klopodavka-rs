@@ -9,9 +9,12 @@ pub struct App {
     new_game_click: Callback<ClickEvent>,
     cell_click: Vec<Vec<Callback<ClickEvent>>>,
     game: GameState,
-    interval: IntervalService,
     console: ConsoleService,
+
+    #[allow(dead_code)]
     callback_tick: Callback<()>,
+
+    #[allow(dead_code)]
     tick_handle: Box<dyn Task>,
 }
 
@@ -104,7 +107,6 @@ impl Component for App {
 
         App {
             game: game::GameState::new(),
-            interval,
             cell_click: (0..BOARD_WIDTH)
                 .map(|x| {
                     (0..BOARD_HEIGHT)
