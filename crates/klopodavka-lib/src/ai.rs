@@ -1,6 +1,6 @@
 use crate::board;
 use crate::game::GameState;
-use crate::models::{Pos, TilePos};
+use crate::models::{Pos, TilePos, BOARD_HEIGHT, BOARD_WIDTH};
 
 pub fn moves(game: &GameState) -> impl Iterator<Item = TilePos> + '_ {
     game.moves().iter().map(move |&pos| TilePos {
@@ -63,6 +63,13 @@ fn weight(game: &GameState, pos: Pos, include_base_dist: bool) -> u16 {
 
     let nondiag_neighbs = nonempty_neighbs - diag_neighbs;
 
+    let is_edge =
+        if pos.x == 0 || pos.y == 0 || pos.x == BOARD_WIDTH - 1 || pos.y == BOARD_HEIGHT - 1 {
+            1
+        } else {
+            0
+        };
+
     // TODO: Base positions should be saved within GameState
     let base_dist = if include_base_dist {
         let enemy_base = board::base_pos(game.current_player().other());
@@ -71,7 +78,7 @@ fn weight(game: &GameState, pos: Pos, include_base_dist: bool) -> u16 {
         0
     };
 
-    let weight = diag_neighbs + nondiag_neighbs * 2 + base_dist as usize;
+    let weight = diag_neighbs + nondiag_neighbs * 2 + base_dist as usize + is_edge;
 
     weight as u16
 }

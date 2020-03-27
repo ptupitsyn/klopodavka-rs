@@ -102,7 +102,7 @@ impl Component for App {
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         let mut interval = IntervalService::new();
         let callback_tick = link.callback(|_| Msg::Tick);
-        let handle = interval.spawn(Duration::from_millis(300), callback_tick.clone());
+        let handle = interval.spawn(Duration::from_millis(150), callback_tick.clone());
         let tick_handle = Box::new(handle);
 
         App {
