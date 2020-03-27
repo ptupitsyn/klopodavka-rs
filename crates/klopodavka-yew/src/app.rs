@@ -4,14 +4,12 @@ use klopodavka_lib::{ai, game};
 use yew::prelude::*;
 
 pub struct App {
-    ai_move_click: Callback<ClickEvent>,
     new_game_click: Callback<ClickEvent>,
     cell_click: Vec<Vec<Callback<ClickEvent>>>,
     game: GameState,
 }
 
 pub enum Msg {
-    MakeAiMove,
     MakeMove(Pos),
     NewGame,
 }
@@ -93,7 +91,6 @@ impl Component for App {
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
         App {
-            ai_move_click: link.callback(|_| Msg::MakeAiMove),
             game: game::GameState::new(),
             cell_click: (0..BOARD_WIDTH)
                 .map(|x| {
@@ -110,13 +107,6 @@ impl Component for App {
         let game_state = &mut self.game;
 
         match msg {
-            Msg::MakeAiMove => match ai::get_ai_move(game_state) {
-                Some(tile) => {
-                    game_state.make_move(tile.pos);
-                    true
-                }
-                None => false,
-            },
             Msg::MakeMove(pos) => {
                 game_state.make_move(pos);
 
@@ -155,11 +145,15 @@ impl Component for App {
 
         html! {
             <>
-                <img src="logo.svg" alt="Logo" style="width: 640px"/>
+                <div>
+                    <div style="float: right">
+                        <img src="rust_logo.svg" alt="Rust Logo" style="width: 80px"/>
+                    </div>
+                    <img src="logo.svg" alt="Klopodavka Logo" style="width: 640px"/>
+                </div>
 
                 <div>
                     <div style="float: right">
-                        <button class="button" style="margin-right: 10px" onclick=&self.ai_move_click>{ "AI Move" }</button>
                         <button class="button" onclick=&self.new_game_click>{ "New Game" }</button>
                     </div>
 
