@@ -18,6 +18,7 @@ pub fn get_ai_move(game: &GameState) -> Option<TilePos> {
 }
 
 fn attack_move(game: &GameState) -> Option<TilePos> {
+    // TODO: Find a tile to cut them off better - maximize enemy cost to reach our base.
     moves(game).find(|&t| t.tile.is_alive())
 }
 
@@ -44,6 +45,10 @@ fn advance_move(game: &GameState) -> Option<TilePos> {
         }
     }
 
+    // TODO: Squashed are present. Rush to enemy base with A*
+    // * Maximize squashes
+    // * Minimize new clops
+    // * Minimize contact with squashed enemy tiles.
     moves(game).min_by(|&x, &y| weight(game, x.pos, true).cmp(&weight(game, y.pos, true)))
 }
 
