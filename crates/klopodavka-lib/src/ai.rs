@@ -64,6 +64,7 @@ fn attack_move(game: &GameState) -> Option<Pos> {
         .map_or(std::u32::MAX, |p| p.count() as u32)
     };
 
+    // TODO: Use moves plus any reachable enemy tiles for better cutoff
     moves(game)
         .filter(|&t| t.tile.is_alive())
         .max_by(|a, b| cost(a.pos).cmp(&cost(b.pos)))
