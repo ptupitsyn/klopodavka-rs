@@ -2,7 +2,32 @@ use crate::board;
 use crate::board::dist;
 use crate::game::GameState;
 use crate::models::{Pos, TilePos, Tiles, BOARD_HEIGHT, BOARD_WIDTH};
-use std::collections::HashMap;
+use std::cmp::Ordering;
+use std::collections::{BinaryHeap, HashMap};
+
+#[derive(Copy, Clone, Eq, PartialEq)]
+struct PosCost {
+    pos: Pos,
+    cost: u32,
+}
+
+impl Ord for PosCost {
+    fn cmp(&self, other: &Self) -> Ordering {
+        // Flip order on cost.
+        // Compare on x & y too for consistency across Ord and PartialEq.
+        other
+            .cost
+            .cmp(&self.cost)
+            .then_with(|| self.pos.x.cmp(&other.pos.x))
+            .then_with(|| self.pos.y.cmp(&other.pos.y))
+    }
+}
+
+impl PartialOrd for PosCost {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
 
 pub fn moves(game: &GameState) -> impl Iterator<Item = TilePos> + '_ {
     game.moves().iter().map(move |&pos| TilePos {
@@ -93,8 +118,11 @@ fn weight(game: &GameState, pos: Pos, include_base_dist: bool) -> u16 {
 /// Finds cheapest path between two positions.
 fn find_path(board: &Tiles, start: Pos, end: Pos) -> Option<Vec<Pos>> {
     // List of nodes to visit.
-    let mut open: Vec<Pos> = Vec::new();
-    open.push(start);
+    let mut heap = BinaryHeap::new();
+    heap.push(PosCost {
+        pos: start,
+        cost: 0,
+    });
 
     // List of visited nodes.
     let mut closed: Vec<Pos> = Vec::new();
@@ -103,27 +131,23 @@ fn find_path(board: &Tiles, start: Pos, end: Pos) -> Option<Vec<Pos>> {
     let mut came_from: HashMap<Pos, Pos> = HashMap::new();
 
     // For node n, gScore[n] is the cost of the cheapest path from start to n currently known.
+    // TODO: Replace map with array
     let mut g_score: HashMap<Pos, u64> = HashMap::new();
     g_score.insert(start, 0);
 
     // For node n, fScore[n] := gScore[n] + h(n). fScore[n] represents our current best guess as to
     // how short a path from start to finish can be if it goes through n.
+    // TODO: Replace map with array
     let mut f_score: HashMap<Pos, u64> = HashMap::new();
     f_score.insert(start, dist(start, end) as u64);
 
-    fn get_current(open: &Vec<Pos>, f_score: &HashMap<Pos, u64>) -> Option<Pos> {
-        open.iter()
-            .min_by(|a, b| f_score.get(a).cmp(&f_score.get(b)))
-            .copied()
-    };
-
-    while let Some(current) = get_current(&open, &f_score) {
-        if current == end {
+    while let Some(current) = heap.pop() {
+        if current.pos == end {
             // Return results
             let mut res: Vec<Pos> = Vec::new();
-            res.push(current);
+            res.push(current.pos);
 
-            let mut p = current;
+            let mut p = current.pos;
 
             while let Some(&from) = came_from.get(&p) {
                 res.push(from);
@@ -133,20 +157,18 @@ fn find_path(board: &Tiles, start: Pos, end: Pos) -> Option<Vec<Pos>> {
             return Some(res);
         }
 
-        closed.push(current);
-        // TODO
-        //open.remove_item(&pos);
+        closed.push(current.pos);
 
-        for neighb in board::neighbors(current) {
+        for neighb in board::neighbors(current.pos) {
             // TODO: Exclude invalid moves (squashed tiles, bases, etc).
-            let cur_score = g_score.get(&current).unwrap();
+            let cur_score = g_score.get(&current.pos).unwrap();
             let neight_weight = 1; // TODO: Get from somewhere
             let neighb_score = cur_score + neight_weight;
             let &old_neighb_score = g_score.get(&neighb).unwrap_or(&std::u64::MAX);
 
             if neighb_score < old_neighb_score {
                 // Found a better path through neigb, record it.
-                came_from.insert(neighb, current);
+                came_from.insert(neighb, current.pos);
                 g_score.insert(neighb, neighb_score);
                 f_score.insert(neighb, neighb_score + dist(neighb, end) as u64);
 
