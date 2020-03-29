@@ -41,7 +41,7 @@ pub const BOARD_HEIGHT: u16 = 30;
 
 pub const BASE_OFFSET: u16 = 2;
 
-// TODO: This should probably be dynamic in size (vec) for customizable boards
+// TODO: Encapsulate board behind a type, with size, set and get
 pub type Tiles = [[Tile; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
