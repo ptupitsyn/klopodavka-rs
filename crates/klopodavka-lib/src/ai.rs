@@ -78,14 +78,7 @@ fn advance_move(game: &GameState) -> Option<Pos> {
     }
 
     // Rush to enemy base with path finding.
-    if let Some(pos) = find_path(
-        game,
-        game.current_player(),
-        game.current_base(),
-        game.enemy_base(),
-    )
-    .and_then(|i| i.filter(|&p| game.is_valid_move(p)).last())
-    {
+    if let Some(pos) = find_path(game).and_then(|i| i.filter(|&p| game.is_valid_move(p)).last()) {
         return Some(pos);
     }
 
@@ -131,12 +124,23 @@ fn weight(game: &GameState, pos: Pos, include_base_dist: bool) -> u16 {
     weight as u16
 }
 
+fn find_path(game: &GameState) -> Option<impl Iterator<Item = Pos>> {
+    find_path_ex(
+        game,
+        game.current_player(),
+        game.current_base(),
+        game.enemy_base(),
+        None,
+    )
+}
+
 /// Finds cheapest path between two positions with A* algorithm, using board::dist() as heuristic.
-fn find_path(
+fn find_path_ex(
     game: &GameState,
     player: Player,
     start: Pos,
     end: Pos,
+    tile_override: Option<TilePos>,
 ) -> Option<impl Iterator<Item = Pos>> {
     if start == end {
         return None;
@@ -245,7 +249,7 @@ fn find_path(
 
 #[cfg(test)]
 mod tests {
-    use crate::ai::{find_path, get_ai_move};
+    use crate::ai::{find_path, find_path_ex, get_ai_move};
     use crate::models::{Player, Pos};
     use crate::{board, game};
     use rand::seq::IteratorRandom;
@@ -281,7 +285,7 @@ mod tests {
         let end = game.enemy_base();
         let player = game.current_player();
 
-        let path: Vec<Pos> = find_path(&game, player, start, end)
+        let path: Vec<Pos> = find_path_ex(&game, player, start, end, None)
             .expect("path is expected")
             .collect();
 
@@ -300,13 +304,8 @@ mod tests {
     #[test]
     fn find_path_returns_valid_moves() {
         let mut game = game::GameState::new_custom(1000);
-        let start = game.current_base();
-        let end = game.enemy_base();
-        let player = game.current_player();
 
-        let mut path: Vec<Pos> = find_path(&game, player, start, end)
-            .expect("path is expected")
-            .collect();
+        let mut path: Vec<Pos> = find_path(&game).expect("path is expected").collect();
 
         path.reverse();
 
@@ -327,7 +326,7 @@ mod tests {
         };
         let player = game.current_player();
 
-        let path: Vec<Pos> = find_path(&game, player, start, end)
+        let path: Vec<Pos> = find_path_ex(&game, player, start, end, None)
             .expect("path is expected")
             .collect();
 
@@ -338,7 +337,7 @@ mod tests {
     fn find_path_returns_none_for_same_start_end() {
         let game = game::GameState::new();
         let pos = game.current_base();
-        let path = find_path(&game, game.current_player(), pos, pos);
+        let path = find_path_ex(&game, game.current_player(), pos, pos, None);
 
         assert!(path.is_none());
     }
