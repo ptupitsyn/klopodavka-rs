@@ -84,7 +84,7 @@ fn advance_move(game: &GameState) -> Option<Pos> {
         game.current_base(),
         game.enemy_base(),
     )
-    .and_then(|i| i.last())
+    .and_then(|i| i.filter(|&p| game.is_valid_move(p)).last())
     {
         return Some(pos);
     }
