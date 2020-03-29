@@ -1,7 +1,9 @@
 use crate::board;
 use crate::board::dist;
 use crate::game::GameState;
+use crate::models::Tile::Squashed;
 use crate::models::{Player, Pos, Tile, TilePos, BOARD_HEIGHT, BOARD_WIDTH};
+use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
@@ -45,8 +47,28 @@ pub fn get_ai_move(game: &GameState) -> Option<Pos> {
 }
 
 fn attack_move(game: &GameState) -> Option<Pos> {
-    // TODO: Find a tile to cut them off better - maximize enemy cost to reach our base.
-    moves(game).find(|&t| t.tile.is_alive()).map(|t| t.pos)
+    let player = game.current_player();
+    let enemy = player.other();
+
+    // TODO: Use better cost instead of count()
+    let cost = |p| {
+        find_path_ex(
+            game,
+            enemy,
+            game.enemy_base(),
+            game.current_base(),
+            Some(TilePos {
+                pos: p,
+                tile: Squashed(player),
+            }),
+        )
+        .map_or(std::u32::MAX, |p| p.count() as u32)
+    };
+
+    moves(game)
+        .filter(|&t| t.tile.is_alive())
+        .max_by(|a, b| cost(a.pos).cmp(&cost(b.pos)))
+        .map(|p| p.pos)
 }
 
 fn advance_move(game: &GameState) -> Option<Pos> {
