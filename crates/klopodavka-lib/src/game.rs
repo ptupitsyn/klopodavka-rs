@@ -172,6 +172,7 @@ impl GameState {
     }
 
     pub fn winner(&self) -> Option<Player> {
+        // TODO: Early detection with pathfinder.
         if self.moves.is_empty() {
             Some(self.current_player.other())
         } else {
