@@ -2,7 +2,9 @@ use crate::board;
 use crate::board::dist;
 use crate::game::GameState;
 use crate::models::{Pos, TilePos, Tiles, BOARD_HEIGHT, BOARD_WIDTH};
+use std::borrow::Borrow;
 use std::collections::HashMap;
+use std::intrinsics::caller_location;
 
 pub fn moves(game: &GameState) -> impl Iterator<Item = TilePos> + '_ {
     game.moves().iter().map(move |&pos| TilePos {
@@ -90,17 +92,24 @@ fn weight(game: &GameState, pos: Pos, include_base_dist: bool) -> u16 {
     weight as u16
 }
 
+/// Finds cheapest path between two positions.
 fn find_path(board: &Tiles, start: Pos, end: Pos) -> Option<Vec<Pos>> {
+    // List of nodes to visit.
     let mut open: Vec<Pos> = Vec::new();
     open.push(start);
 
+    // List of visited nodes.
     let mut closed: Vec<Pos> = Vec::new();
 
+    // "Parent" nodes map - allows us to reconstruct the path from start to given pos.
     let mut came_from: HashMap<Pos, Pos> = HashMap::new();
 
+    // For node n, gScore[n] is the cost of the cheapest path from start to n currently known.
     let mut g_score: HashMap<Pos, u64> = HashMap::new();
     g_score.insert(start, 0);
 
+    // For node n, fScore[n] := gScore[n] + h(n). fScore[n] represents our current best guess as to
+    // how short a path from start to finish can be if it goes through n.
     let mut f_score: HashMap<Pos, u64> = HashMap::new();
     f_score.insert(start, dist(start, end) as u64);
 
@@ -120,6 +129,30 @@ fn find_path(board: &Tiles, start: Pos, end: Pos) -> Option<Vec<Pos>> {
             while let Some(&from) = came_from.get(&p) {
                 res.push(from);
                 p = from;
+            }
+
+            return Some(res);
+        }
+
+        closed.push(current);
+        // TODO
+        //open.remove_item(&pos);
+
+        for neighb in board::neighbors(current) {
+            // TODO: Exclude invalid moves (squashed tiles, bases, etc).
+            let cur_score = g_score.get(&current).unwrap();
+            let neight_weight = 1; // TODO: Get from somewhere
+            let neighb_score = cur_score + neight_weight;
+            let &old_neighb_score = g_score.get(&neighb).unwrap_or(&std::u64::MAX);
+
+            if neighb_score < old_neighb_score {
+                // Found a better path through neigb, record it.
+                came_from.insert(neighb, current);
+                g_score.insert(neighb, neighb_score);
+                f_score.insert(neighb, neighb_score + dist(neighb, end) as u64);
+
+                // TODO:
+                // if neighbor not in closeSet openSet.add(neighbor)
             }
         }
     }
