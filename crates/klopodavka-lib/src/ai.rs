@@ -164,6 +164,7 @@ fn find_path(
 
         for neighb in board::neighbors(current.pos) {
             if neighb == end {
+                // Target reached, return results.
                 let mut res_pos = current.pos;
 
                 let iter = std::iter::from_fn(move || {
@@ -175,6 +176,25 @@ fn find_path(
 
                     None
                 });
+
+                // TEMP: Print costs
+                let mut res = String::new();
+
+                #[allow(clippy::needless_range_loop)]
+                for y in 0..BOARD_HEIGHT {
+                    for x in 0..BOARD_WIDTH {
+                        let cost = g_score[x as usize][y as usize];
+                        if cost == std::u64::MAX {
+                            res.push_str(" ?  ");
+                        } else {
+                            res.push_str(format!("{:^3} ", cost).as_str());
+                        };
+                    }
+                    res.push('\n');
+                }
+
+                println!("{}", res);
+                // END
 
                 return Some(iter);
             }
