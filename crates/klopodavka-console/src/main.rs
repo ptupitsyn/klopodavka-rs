@@ -14,7 +14,7 @@ fn main() {
             move_count += 1;
 
             match ai::get_ai_move(&game) {
-                Some(tile) => game.make_move(tile.pos),
+                Some(pos) => game.make_move(pos),
                 None => break,
             }
         }

@@ -15,7 +15,7 @@ mod tests {
 
         for _i in 1..20 {
             match ai::get_ai_move(&game) {
-                Some(tile) => game.make_move(tile.pos),
+                Some(pos) => game.make_move(pos),
                 None => break,
             }
         }

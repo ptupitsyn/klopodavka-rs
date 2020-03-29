@@ -159,6 +159,14 @@ impl GameState {
         self.current_player
     }
 
+    pub fn current_base(&self) -> Pos {
+        board::base_pos(self.current_player)
+    }
+
+    pub fn enemy_base(&self) -> Pos {
+        board::base_pos(self.current_player.other())
+    }
+
     pub fn winner(&self) -> Option<Player> {
         if self.moves.is_empty() {
             Some(self.current_player.other())

@@ -1,11 +1,9 @@
 use crate::board;
 use crate::board::dist;
 use crate::game::GameState;
-use crate::models::Tile::Squashed;
-use crate::models::{Player, Pos, Tile, TilePos, Tiles, BOARD_HEIGHT, BOARD_WIDTH};
+use crate::models::{Player, Pos, Tile, TilePos, BOARD_HEIGHT, BOARD_WIDTH};
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap};
-use std::intrinsics::transmute;
+use std::collections::BinaryHeap;
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 struct PosCost {
@@ -38,12 +36,14 @@ pub fn moves(game: &GameState) -> impl Iterator<Item = TilePos> + '_ {
     })
 }
 
-pub fn get_ai_move(game: &GameState) -> Option<TilePos> {
+pub fn get_ai_move(game: &GameState) -> Option<Pos> {
     if game.moves().is_empty() {
         return Option::None;
     }
 
-    attack_move(game).or_else(|| advance_move(game))
+    attack_move(game)
+        .or_else(|| advance_move(game))
+        .map(|tp| tp.pos)
 }
 
 fn attack_move(game: &GameState) -> Option<TilePos> {
@@ -71,6 +71,20 @@ fn advance_move(game: &GameState) -> Option<TilePos> {
                 .sum();
 
             return moves.get(empty_tiles_pos_sum % moves.len()).copied();
+        }
+    }
+
+    if let Some(path) = find_path(
+        game,
+        game.current_player(),
+        game.current_base(),
+        game.enemy_base(),
+    ) {
+        if let Some(&pos) = path.first() {
+            return Some(TilePos {
+                pos,
+                tile: game.tile(pos),
+            });
         }
     }
 
@@ -104,9 +118,8 @@ fn weight(game: &GameState, pos: Pos, include_base_dist: bool) -> u16 {
             0
         };
 
-    // TODO: Base positions should be saved within GameState
     let base_dist = if include_base_dist {
-        let enemy_base = board::base_pos(game.current_player().other());
+        let enemy_base = game.enemy_base();
         board::dist(enemy_base, pos)
     } else {
         0
@@ -215,7 +228,6 @@ mod tests {
             let pos = if game.current_player() == ai_player {
                 get_ai_move(&game)
                     .expect("get_ai_move returns something when game.moves() is not empty")
-                    .pos
             } else {
                 *game
                     .moves()
