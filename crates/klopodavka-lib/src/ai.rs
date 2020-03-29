@@ -64,7 +64,7 @@ fn attack_move(game: &GameState) -> Option<Pos> {
         .map_or(std::u32::MAX, |p| p.count() as u32)
     };
 
-    // TODO: Use moves plus any reachable enemy tiles for better cutoff
+    // TODO: Use moves plus any reachable enemy tiles for better cutoff (use heatmap??)
     // TODO: Add path caching based on game.turn_number()
     moves(game)
         .filter(|&t| t.tile.is_alive())
