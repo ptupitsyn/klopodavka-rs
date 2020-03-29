@@ -3,7 +3,6 @@ use crate::board::dist;
 use crate::game::GameState;
 use crate::models::Tile::Squashed;
 use crate::models::{Player, Pos, Tile, TilePos, BOARD_HEIGHT, BOARD_WIDTH};
-use std::borrow::Borrow;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
@@ -337,8 +336,6 @@ mod tests {
         for pos in path {
             game.make_move(pos);
         }
-
-        println!("{}", game)
     }
 
     #[test]
