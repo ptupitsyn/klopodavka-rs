@@ -267,16 +267,16 @@ mod tests {
     #[test]
     fn find_path_works_on_empty_board() {
         let game = game::GameState::new();
+        let start = game.current_base();
+        let end = game.enemy_base();
+        let player = game.current_player();
 
-        let path: Vec<Pos> = find_path(
-            &game,
-            game.current_player(),
-            game.current_base(),
-            game.enemy_base(),
-        )
-        .expect("path is expected")
-        .collect();
+        let path: Vec<Pos> = find_path(&game, player, start, end)
+            .expect("path is expected")
+            .collect();
 
+        // TODO: Assert that Start and End are excluded from path,
+        // but are neighbors for the first and last
         assert!(!path.is_empty());
     }
 
