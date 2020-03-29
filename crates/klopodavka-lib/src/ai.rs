@@ -1,6 +1,8 @@
 use crate::board;
+use crate::board::dist;
 use crate::game::GameState;
-use crate::models::{Pos, TilePos, BOARD_HEIGHT, BOARD_WIDTH};
+use crate::models::{Pos, TilePos, Tiles, BOARD_HEIGHT, BOARD_WIDTH};
+use std::collections::HashMap;
 
 pub fn moves(game: &GameState) -> impl Iterator<Item = TilePos> + '_ {
     game.moves().iter().map(move |&pos| TilePos {
@@ -88,6 +90,43 @@ fn weight(game: &GameState, pos: Pos, include_base_dist: bool) -> u16 {
     weight as u16
 }
 
+fn find_path(board: &Tiles, start: Pos, end: Pos) -> Option<Vec<Pos>> {
+    let mut open: Vec<Pos> = Vec::new();
+    open.push(start);
+
+    let mut closed: Vec<Pos> = Vec::new();
+
+    let mut came_from: HashMap<Pos, Pos> = HashMap::new();
+
+    let mut g_score: HashMap<Pos, u64> = HashMap::new();
+    g_score.insert(start, 0);
+
+    let mut f_score: HashMap<Pos, u64> = HashMap::new();
+    f_score.insert(start, dist(start, end) as u64);
+
+    let get_current = || {
+        open.iter()
+            .min_by(|a, b| f_score.get(a).cmp(&f_score.get(b)))
+    };
+
+    while let Some(&current) = get_current() {
+        if current == end {
+            // Return results
+            let mut res: Vec<Pos> = Vec::new();
+            res.push(current);
+
+            let mut p = current;
+
+            while let Some(&from) = came_from.get(&p) {
+                res.push(from);
+                p = from;
+            }
+        }
+    }
+
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use crate::ai::get_ai_move;
@@ -102,7 +141,9 @@ mod tests {
 
         while !game.moves().is_empty() {
             let pos = if game.current_player() == ai_player {
-                get_ai_move(&game).unwrap().pos
+                get_ai_move(&game)
+                    .expect("get_ai_move returns something when game.moves() is not empty")
+                    .pos
             } else {
                 *game.moves().iter().choose(&mut rand::thread_rng()).unwrap()
             };
