@@ -130,8 +130,7 @@ fn find_path(game: &GameState, player: Player, start: Pos, end: Pos) -> Option<V
     let mut visited = [[false; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
 
     // "Parent" nodes map - allows us to reconstruct the path from start to given pos.
-    // TODO: Array
-    let mut came_from: HashMap<Pos, Pos> = HashMap::new();
+    let mut came_from = [[None as Option<Pos>; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
 
     // For node n, gScore[n] is the cost of the cheapest path from start to n currently known.
     let mut g_score = [[std::u64::MAX; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
@@ -145,7 +144,7 @@ fn find_path(game: &GameState, player: Player, start: Pos, end: Pos) -> Option<V
 
             let mut p = current.pos;
 
-            while let Some(&from) = came_from.get(&p) {
+            while let Some(from) = came_from[p.x as usize][p.y as usize] {
                 res.push(from);
                 p = from;
             }
@@ -184,7 +183,7 @@ fn find_path(game: &GameState, player: Player, start: Pos, end: Pos) -> Option<V
 
             if neighb_score < old_neighb_score {
                 // Found a better path through neigb, record it.
-                came_from.insert(neighb, current.pos);
+                came_from[neighb.x as usize][neighb.y as usize] = Some(current.pos);
                 g_score[neighb.x as usize][neighb.y as usize] = neighb_score;
 
                 if !visited[neighb.x as usize][neighb.y as usize] {
