@@ -290,8 +290,11 @@ mod tests {
         assert!(!path.contains(&start));
         assert!(!path.contains(&end));
 
-        let path_start = path.last().expect("path start is expected");
-        let path_end = path.first().expect("path end is expected");
+        let path_start = path.last().copied().expect("path start is expected");
+        let path_end = path.first().copied().expect("path end is expected");
+
+        assert_eq!(board::dist(start, path_start), 1);
+        assert_eq!(board::dist(end, path_end), 1);
     }
 
     #[test]
