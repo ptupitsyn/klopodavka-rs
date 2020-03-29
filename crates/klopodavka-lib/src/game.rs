@@ -104,14 +104,18 @@ fn new_moves_map() -> BoolTiles {
 #[allow(clippy::new_without_default)]
 impl GameState {
     pub fn new() -> Self {
+        GameState::new_custom(TURN_LENGTH as u32)
+    }
+
+    pub fn new_custom(turn_length: u32) -> Self {
         let tiles = board::create_board();
         let player = Player::Red;
 
         let mut res = GameState {
             board: tiles,
             current_player: player,
-            moves_left: TURN_LENGTH as u32,
-            turn_length: TURN_LENGTH as u32,
+            turn_length,
+            moves_left: turn_length,
             moves_map: new_moves_map(),
             moves: Vec::with_capacity(64),
             heat_map: new_heat_map(),

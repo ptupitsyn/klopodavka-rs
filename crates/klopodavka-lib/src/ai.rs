@@ -164,31 +164,19 @@ fn find_path(
 
         for neighb in board::neighbors(current.pos) {
             if neighb == end {
-                // Return results
-
-                /*
-                let mut res: Vec<Pos> = Vec::new();
-                res.push(current.pos);
-
-                let mut p = current.pos;
-
-                while let Some(from) = came_from[p.x as usize][p.y as usize] {
-                    res.push(from);
-                    p = from;
-                }
-
-                return res.iter();
-                */
                 let mut res_pos = current.pos;
 
-                return Some(std::iter::from_fn(move || {
-                    if let Some(from) = came_from[res_pos.x as usize][res_pos.y as usize] {
-                        res_pos = from;
-                        return Some(res_pos);
+                let iter = std::iter::from_fn(move || {
+                    if let Some(prev) = came_from[res_pos.x as usize][res_pos.y as usize] {
+                        let res = Some(res_pos);
+                        res_pos = prev;
+                        return res;
                     }
 
                     None
-                }));
+                });
+
+                return Some(iter);
             }
 
             let tile = game.tile(neighb);
@@ -236,8 +224,8 @@ fn find_path(
 #[cfg(test)]
 mod tests {
     use crate::ai::{find_path, get_ai_move};
-    use crate::game;
     use crate::models::{Player, Pos};
+    use crate::{board, game};
     use rand::seq::IteratorRandom;
 
     #[test]
@@ -275,9 +263,50 @@ mod tests {
             .expect("path is expected")
             .collect();
 
-        // TODO: Assert that Start and End are excluded from path,
-        // but are neighbors for the first and last
         assert!(!path.is_empty());
+        assert_eq!(path.len(), board::dist(start, end) as usize);
+        assert!(!path.contains(&start));
+        assert!(!path.contains(&end));
+
+        let path_start = path.last().expect("path start is expected");
+        let path_end = path.first().expect("path end is expected");
+    }
+
+    #[test]
+    fn find_path_returns_valid_moves() {
+        let mut game = game::GameState::new_custom(1000);
+        let start = game.current_base();
+        let end = game.enemy_base();
+        let player = game.current_player();
+
+        let mut path: Vec<Pos> = find_path(&game, player, start, end)
+            .expect("path is expected")
+            .collect();
+
+        path.reverse();
+
+        for pos in path {
+            game.make_move(pos);
+        }
+
+        println!("{}", game)
+    }
+
+    #[test]
+    fn find_path_returns_empty_iter_for_adjacent_tiles() {
+        let game = game::GameState::new();
+        let start = game.current_base();
+        let end = Pos {
+            x: start.x,
+            y: start.y + 1,
+        };
+        let player = game.current_player();
+
+        let path: Vec<Pos> = find_path(&game, player, start, end)
+            .expect("path is expected")
+            .collect();
+
+        assert!(path.is_empty());
     }
 
     #[test]
