@@ -177,6 +177,7 @@ fn find_path(
                     None
                 });
 
+                /*
                 // TEMP: Print costs
                 let mut res = String::new();
 
@@ -195,6 +196,7 @@ fn find_path(
 
                 println!("{}", res);
                 // END
+                */
 
                 return Some(iter);
             }
@@ -203,7 +205,7 @@ fn find_path(
 
             let neighb_cost = match tile {
                 // Moving into empty tile is not as good as squashing.
-                Tile::Empty => weight(game, neighb, false) * 3,
+                Tile::Empty => (1 + weight(game, neighb, false)) * 3,
 
                 // Tile belongs to the player and does not cost anything.
                 Tile::Alive(p) | Tile::Squashed(p) if p == player => 0,
@@ -284,7 +286,7 @@ mod tests {
             .collect();
 
         assert!(!path.is_empty());
-        assert_eq!(path.len(), board::dist(start, end) as usize);
+        assert_eq!(path.len() + 1, board::dist(start, end) as usize);
         assert!(!path.contains(&start));
         assert!(!path.contains(&end));
 
