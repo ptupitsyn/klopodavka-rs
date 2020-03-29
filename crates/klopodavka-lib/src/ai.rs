@@ -189,9 +189,7 @@ fn find_path(game: &GameState, player: Player, start: Pos, end: Pos) -> Option<V
                 continue;
             }
 
-            // TODO: Exclude invalid moves (squashed tiles, bases, etc).
             let cur_score = g_score[current.pos.x as usize][current.pos.y as usize];
-            // TODO: According to tile type (squash is cheap, new clop is expensive, depending on neighbor count, etc)
             let neighb_score = cur_score + neighb_cost as u64;
             let old_neighb_score = g_score[neighb.x as usize][neighb.y as usize];
 
