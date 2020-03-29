@@ -145,13 +145,17 @@ mod tests {
                     .expect("get_ai_move returns something when game.moves() is not empty")
                     .pos
             } else {
-                *game.moves().iter().choose(&mut rand::thread_rng()).unwrap()
+                *game
+                    .moves()
+                    .iter()
+                    .choose(&mut rand::thread_rng())
+                    .expect("random")
             };
 
             game.make_move(pos);
         }
 
         // AI opponent has no more moves left => AI won.
-        assert_eq!(game.winner().unwrap(), ai_player);
+        assert_eq!(game.winner().expect("some winner"), ai_player);
     }
 }

@@ -72,9 +72,9 @@ fn render_tile_avail(text: &str, style: &str, app: &App, pos: Pos) -> Html {
     let click_handler = app
         .cell_click
         .get(pos.x as usize)
-        .unwrap()
+        .expect("click handler column")
         .get(pos.y as usize)
-        .unwrap();
+        .expect("click handler");
 
     html! {
         <td style=style onclick=click_handler>{ text }</td>
