@@ -205,7 +205,10 @@ fn find_path_ex(
                 return Some(iter);
             }
 
-            let tile = game.tile(neighb);
+            let tile = match tile_override {
+                Some(t) if t.pos == neighb => t.tile,
+                _ => game.tile(neighb),
+            };
 
             let neighb_cost = match tile {
                 // Moving into empty tile is not as good as squashing.
