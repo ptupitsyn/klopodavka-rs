@@ -78,15 +78,15 @@ fn advance_move(game: &GameState) -> Option<Pos> {
     }
 
     // Rush to enemy base with path finding.
-    if let Some(path) = find_path(
+    if let Some(pos) = find_path(
         game,
         game.current_player(),
         game.current_base(),
         game.enemy_base(),
-    ) {
-        if let Some(&pos) = path.first() {
-            return Some(pos);
-        }
+    )
+    .and_then(|mut i| i.next())
+    {
+        return Some(pos);
     }
 
     // Path not found, just do something, we have probably lost at this point.
@@ -132,7 +132,16 @@ fn weight(game: &GameState, pos: Pos, include_base_dist: bool) -> u16 {
 }
 
 /// Finds cheapest path between two positions.
-fn find_path(game: &GameState, player: Player, start: Pos, end: Pos) -> Option<Vec<Pos>> {
+fn find_path(
+    game: &GameState,
+    player: Player,
+    start: Pos,
+    end: Pos,
+) -> Option<impl Iterator<Item = Pos>> {
+    if start == end {
+        return None;
+    }
+
     // List of nodes to visit.
     let mut heap = BinaryHeap::new();
     heap.push(PosCost {
@@ -151,24 +160,32 @@ fn find_path(game: &GameState, player: Player, start: Pos, end: Pos) -> Option<V
     g_score[start.x as usize][start.y as usize] = 0;
 
     while let Some(current) = heap.pop() {
-        if current.pos == end {
-            // Return results
-            let mut res: Vec<Pos> = Vec::new();
-            res.push(current.pos);
-
-            let mut p = current.pos;
-
-            while let Some(from) = came_from[p.x as usize][p.y as usize] {
-                res.push(from);
-                p = from;
-            }
-
-            return Some(res);
-        }
-
         visited[current.pos.x as usize][current.pos.y as usize] = true;
 
         for neighb in board::neighbors(current.pos) {
+            if neighb == end {
+                // Return results
+
+                /*
+                let mut res: Vec<Pos> = Vec::new();
+                res.push(current.pos);
+
+                let mut p = current.pos;
+
+                while let Some(from) = came_from[p.x as usize][p.y as usize] {
+                    res.push(from);
+                    p = from;
+                }
+
+                return res.iter();
+                */
+
+                return Some(std::iter::from_fn(move || {
+                    let pos: Option<Pos> = None;
+                    pos
+                }));
+            }
+
             let tile = game.tile(neighb);
 
             let neighb_cost = match tile {
@@ -215,7 +232,7 @@ fn find_path(game: &GameState, player: Player, start: Pos, end: Pos) -> Option<V
 mod tests {
     use crate::ai::{find_path, get_ai_move};
     use crate::game;
-    use crate::models::Player;
+    use crate::models::{Player, Pos};
     use rand::seq::IteratorRandom;
 
     #[test]
@@ -244,15 +261,18 @@ mod tests {
 
     #[test]
     fn find_path_works_on_empty_board() {
-        let mut game = game::GameState::new();
+        let game = game::GameState::new();
 
-        let path = find_path(
+        let path: Vec<Pos> = find_path(
             &game,
             game.current_player(),
             game.current_base(),
             game.enemy_base(),
         )
-        .expect("Path is expected");
+        .expect("path is expected")
+        .collect();
+
+        assert!(!path.is_empty());
     }
 
     #[test]
