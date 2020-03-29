@@ -41,24 +41,24 @@ pub fn get_ai_move(game: &GameState) -> Option<Pos> {
         return Option::None;
     }
 
-    attack_move(game)
-        .or_else(|| advance_move(game))
-        .map(|tp| tp.pos)
+    attack_move(game).or_else(|| advance_move(game))
 }
 
-fn attack_move(game: &GameState) -> Option<TilePos> {
+fn attack_move(game: &GameState) -> Option<Pos> {
     // TODO: Find a tile to cut them off better - maximize enemy cost to reach our base.
-    moves(game).find(|&t| t.tile.is_alive())
+    moves(game).find(|&t| t.tile.is_alive()).map(|t| t.pos)
 }
 
-fn advance_move(game: &GameState) -> Option<TilePos> {
+fn advance_move(game: &GameState) -> Option<Pos> {
     let has_squashed = game.tiles().any(|t| t.tile.is_squashed());
 
     if !has_squashed {
         // Return random diagonal move when fight has not yet started.
         // Note: this is quite slow.
-        let moves: Vec<TilePos> = moves(game)
-            .filter(|m| weight(game, m.pos, false) == 1)
+        let moves: Vec<&Pos> = game
+            .moves()
+            .iter()
+            .filter(|&&pos| weight(game, pos, false) == 1)
             .collect();
 
         if !moves.is_empty() {
@@ -70,10 +70,14 @@ fn advance_move(game: &GameState) -> Option<TilePos> {
                 .map(|t| t.pos.y as usize + t.pos.x as usize)
                 .sum();
 
-            return moves.get(empty_tiles_pos_sum % moves.len()).copied();
+            return moves
+                .get(empty_tiles_pos_sum % moves.len())
+                .copied()
+                .copied();
         }
     }
 
+    // Rush to enemy base with path finding.
     if let Some(path) = find_path(
         game,
         game.current_player(),
@@ -81,18 +85,15 @@ fn advance_move(game: &GameState) -> Option<TilePos> {
         game.enemy_base(),
     ) {
         if let Some(&pos) = path.first() {
-            return Some(TilePos {
-                pos,
-                tile: game.tile(pos),
-            });
+            return Some(pos);
         }
     }
 
-    // TODO: Squashed are present. Rush to enemy base with A*
-    // * Maximize squashes
-    // * Minimize new clops
-    // * Minimize contact with squashed enemy tiles.
-    moves(game).min_by(|&x, &y| weight(game, x.pos, true).cmp(&weight(game, y.pos, true)))
+    // Path not found, just do something, we have probably lost at this point.
+    game.moves()
+        .iter()
+        .min_by(|&&x, &&y| weight(game, x, true).cmp(&weight(game, y, true)))
+        .copied()
 }
 
 fn weight(game: &GameState, pos: Pos, include_base_dist: bool) -> u16 {
