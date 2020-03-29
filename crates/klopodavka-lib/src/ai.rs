@@ -65,6 +65,7 @@ fn attack_move(game: &GameState) -> Option<Pos> {
     };
 
     // TODO: Use moves plus any reachable enemy tiles for better cutoff
+    // TODO: Add path caching based on game.turn_number()
     moves(game)
         .filter(|&t| t.tile.is_alive())
         .max_by(|a, b| cost(a.pos).cmp(&cost(b.pos)))
