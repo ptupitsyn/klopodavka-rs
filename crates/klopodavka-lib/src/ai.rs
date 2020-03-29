@@ -2,9 +2,7 @@ use crate::board;
 use crate::board::dist;
 use crate::game::GameState;
 use crate::models::{Pos, TilePos, Tiles, BOARD_HEIGHT, BOARD_WIDTH};
-use std::borrow::Borrow;
 use std::collections::HashMap;
-use std::intrinsics::caller_location;
 
 pub fn moves(game: &GameState) -> impl Iterator<Item = TilePos> + '_ {
     game.moves().iter().map(move |&pos| TilePos {
@@ -113,12 +111,13 @@ fn find_path(board: &Tiles, start: Pos, end: Pos) -> Option<Vec<Pos>> {
     let mut f_score: HashMap<Pos, u64> = HashMap::new();
     f_score.insert(start, dist(start, end) as u64);
 
-    let get_current = || {
+    fn get_current(open: &Vec<Pos>, f_score: &HashMap<Pos, u64>) -> Option<Pos> {
         open.iter()
             .min_by(|a, b| f_score.get(a).cmp(&f_score.get(b)))
+            .copied()
     };
 
-    while let Some(&current) = get_current() {
+    while let Some(current) = get_current(&open, &f_score) {
         if current == end {
             // Return results
             let mut res: Vec<Pos> = Vec::new();
