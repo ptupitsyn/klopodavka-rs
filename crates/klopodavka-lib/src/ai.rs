@@ -213,7 +213,7 @@ fn find_path(game: &GameState, player: Player, start: Pos, end: Pos) -> Option<V
 
 #[cfg(test)]
 mod tests {
-    use crate::ai::get_ai_move;
+    use crate::ai::{find_path, get_ai_move};
     use crate::game;
     use crate::models::Player;
     use rand::seq::IteratorRandom;
@@ -240,5 +240,23 @@ mod tests {
 
         // AI opponent has no more moves left => AI won.
         assert_eq!(game.winner().expect("some winner"), ai_player);
+    }
+
+    #[test]
+    fn find_path_works_on_empty_board() {
+        let mut game = game::GameState::new();
+
+        let path = find_path(
+            &game,
+            game.current_player(),
+            game.current_base(),
+            game.enemy_base(),
+        )
+        .expect("Path is expected");
+    }
+
+    #[test]
+    fn find_path_returns_none_when_blocked() {
+        panic!("TODO");
     }
 }
