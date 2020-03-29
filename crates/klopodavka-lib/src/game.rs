@@ -186,7 +186,12 @@ impl GameState {
     pub fn make_move(&mut self, pos: Pos) {
         let valid = self.is_valid_move(pos);
         if !valid {
-            panic!("Invalid move: {:?}", pos)
+            panic!(
+                "Invalid move: {:?} ({:?} -> {:?})",
+                pos,
+                self.tile(pos),
+                self.current_player
+            );
         }
 
         board::make_move(&mut self.board, self.current_player, pos.x, pos.y);

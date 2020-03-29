@@ -143,6 +143,7 @@ impl Component for App {
             Msg::Tick => {
                 if game_state.current_player() == Player::Blue {
                     if let Some(m) = ai::get_ai_move(game_state) {
+                        self.console.info(format!("AI move: {:?}", m).as_str());
                         game_state.make_move(m);
                         return true;
                     }
