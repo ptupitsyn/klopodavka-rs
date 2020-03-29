@@ -131,7 +131,7 @@ fn weight(game: &GameState, pos: Pos, include_base_dist: bool) -> u16 {
     weight as u16
 }
 
-/// Finds cheapest path between two positions.
+/// Finds cheapest path between two positions with A* algorithm, using board::dist() as heuristic.
 fn find_path(
     game: &GameState,
     player: Player,
@@ -179,10 +179,15 @@ fn find_path(
 
                 return res.iter();
                 */
+                let mut res_pos = current.pos;
 
                 return Some(std::iter::from_fn(move || {
-                    let pos: Option<Pos> = None;
-                    pos
+                    if let Some(from) = came_from[res_pos.x as usize][res_pos.y as usize] {
+                        res_pos = from;
+                        return Some(res_pos);
+                    }
+
+                    None
                 }));
             }
 
@@ -278,5 +283,14 @@ mod tests {
     #[test]
     fn find_path_returns_none_when_blocked() {
         panic!("TODO");
+    }
+
+    #[test]
+    fn find_path_returns_none_for_same_start_end() {
+        let game = game::GameState::new();
+        let pos = game.current_base();
+        let path = find_path(&game, game.current_player(), pos, pos);
+
+        assert!(path.is_none());
     }
 }
