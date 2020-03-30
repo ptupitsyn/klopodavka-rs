@@ -1,6 +1,7 @@
 use crate::game::GameState;
 use crate::models::Tile::Squashed;
 use crate::models::{Player, Pos, Tile, TilePos};
+use crate::path::cost_default;
 use crate::{board, path};
 
 #[derive(Debug, Copy, Clone, PartialEq)]
@@ -62,8 +63,10 @@ fn attack_move(game: &GameState, mode: AiMode) -> Option<Pos> {
     game.tiles()
         .filter(|&t| t.tile == Tile::Alive(enemy) && game.heat(t.pos).get(player) > 0)
         .max_by(|a, b| enemy_cost(a.pos).cmp(&enemy_cost(b.pos)))
-        .and_then(|p| path::find_path_ex(game, player, game.current_base(), p.pos, None, cost))
-        .and_then(|iter| iter.last())
+        .and_then(|p| {
+            path::find_path_ex(game, player, game.current_base(), p.pos, None, cost_default)
+        })
+        .and_then(|iter| iter.filter(|&p| game.is_valid_move(p)).last())
 }
 
 fn advance_move(game: &GameState, mode: AiMode) -> Option<Pos> {
