@@ -58,6 +58,8 @@ fn attack_move(game: &GameState, mode: AiMode) -> Option<Pos> {
     };
 
     // TODO: Use moves plus any reachable enemy tiles for better cutoff (use heatmap??)
+    // game.tiles().filter(|&t| t.tile == Tile::Alive(enemy) && game.heat(t.pos).)
+
     moves(game)
         .filter(|&t| t.tile.is_alive())
         .max_by(|a, b| cost(a.pos).cmp(&cost(b.pos)))

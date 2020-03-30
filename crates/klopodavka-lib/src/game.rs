@@ -13,6 +13,22 @@ pub struct HeatMapTile {
     pub blue: u8,
 }
 
+impl HeatMapTile {
+    fn get(self, player: Player) -> u8 {
+        match player {
+            Player::Red => self.red,
+            Player::Blue => self.blue,
+        }
+    }
+
+    fn set(&mut self, player: Player, heat: u8) {
+        match player {
+            Player::Red => self.red = heat,
+            Player::Blue => self.blue = heat,
+        }
+    }
+}
+
 type HeatMap = Tiles<HeatMapTile>;
 
 pub struct GameState {
@@ -46,42 +62,27 @@ fn update_heat_map_incrementally(
     pos: Pos,
     player: Player,
 ) {
-    let enemy = player.other();
-
-    let get = |p, m: &HeatMap| {
-        if player == Player::Red {
-            m[p].red
-        } else {
-            m[p].blue
-        }
-    };
-
-    let set = |p, m: &mut HeatMap, h| {
-        if player == Player::Red {
-            m[p].red = h;
-        } else {
-            m[p].blue = h;
-        }
-    };
-
-    set(pos, map, max_val + 1);
+    map[pos].set(player, max_val + 1);
 
     let mut visited: BoolTiles = Tiles::with_size(map.size());
+
     let mut pending: Vec<Pos> = Vec::new();
     pending.push(pos);
 
+    let enemy = player.other();
+
     while let Some(pos) = pending.pop() {
         visited[pos] = true;
-        let neighb_heat = get(pos, map) - 1;
+        let neighb_heat = map[pos].get(player) - 1;
 
         for neighb in board::neighbors(pos, map.size()) {
             let tile = board[neighb];
 
-            if neighb_heat > get(neighb, map)
+            if neighb_heat > map[neighb].get(player)
                 && tile != Tile::Squashed(enemy)
                 && tile != Tile::Base(enemy)
             {
-                set(neighb, map, neighb_heat);
+                map[neighb].set(player, neighb_heat);
 
                 if !visited[neighb] {
                     pending.push(neighb);
