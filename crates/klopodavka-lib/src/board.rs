@@ -20,7 +20,7 @@ pub fn pos_iter(size: Size) -> impl Iterator<Item = Pos> {
 }
 
 pub fn create_board() -> Board {
-    let mut res = Tiles::new_default();
+    let mut res = Tiles::new();
 
     fn place_base(p: Player, t: &mut Board) {
         let pos = base_pos(p, t.size());
@@ -74,7 +74,7 @@ pub fn connected_tiles(
     player: Player,
     return_potential_moves: bool,
 ) -> impl Iterator<Item = Pos> + '_ {
-    let mut visited: Tiles<bool> = Tiles::new(board.size());
+    let mut visited: Tiles<bool> = Tiles::with_size(board.size());
     let mut stack = Vec::new();
     stack.push(base_pos(player, board.size()));
     let enemy = player.other();

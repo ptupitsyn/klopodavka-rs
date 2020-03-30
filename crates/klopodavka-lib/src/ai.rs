@@ -181,13 +181,13 @@ fn find_path_ex(
 
     // List of visited nodes.
     let size = game.size();
-    let mut visited: BoolTiles = Tiles::new(size);
+    let mut visited: BoolTiles = Tiles::with_size(size);
 
     // "Parent" nodes map - allows us to reconstruct the path from start to given pos.
-    let mut came_from: Tiles<Option<Pos>> = Tiles::new(size);
+    let mut came_from: Tiles<Option<Pos>> = Tiles::with_size(size);
 
     // For node n, gScore[n] is the cost of the cheapest path from start to n currently known.
-    let mut g_score: Tiles<u64> = Tiles::new(size);
+    let mut g_score: Tiles<u64> = Tiles::with_size_and_val(size, std::u64::MAX);
     g_score[start] = 0;
 
     while let Some(current) = heap.pop() {

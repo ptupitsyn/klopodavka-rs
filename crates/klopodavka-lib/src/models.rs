@@ -55,14 +55,18 @@ pub struct Tiles<T: Default + Copy> {
 }
 
 impl<T: Default + Copy> Tiles<T> {
-    pub fn new_default() -> Self {
-        Tiles::new(Size {
+    pub fn new() -> Self {
+        Tiles::with_size(Size {
             width: 30,
             height: 30,
         })
     }
 
-    pub fn new(size: Size) -> Self {
+    pub fn with_size(size: Size) -> Self {
+        Tiles::with_size_and_val(size, T::default())
+    }
+
+    pub fn with_size_and_val(size: Size, val: T) -> Self {
         let min = BASE_OFFSET * 2;
         if size.width < min || size.height < min {
             panic!(
@@ -73,9 +77,7 @@ impl<T: Default + Copy> Tiles<T> {
 
         Tiles {
             size,
-            tiles: (0..size.width * size.height)
-                .map(|_| T::default())
-                .collect(),
+            tiles: (0..size.width * size.height).map(|_| val).collect(),
         }
     }
 

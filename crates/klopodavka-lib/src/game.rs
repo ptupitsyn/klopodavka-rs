@@ -32,7 +32,7 @@ fn update_moves(game: &mut GameState) {
         .splice(0.., board::moves(&game.board, game.current_player));
 
     // Reallocate map - faster than clean/update.
-    game.moves_map = Tiles::new(game.board.size());
+    game.moves_map = Tiles::with_size(game.board.size());
 
     for pos in game.moves.iter() {
         game.moves_map.setp(*pos, true);
@@ -87,7 +87,7 @@ fn update_heat_map_fully(game: &mut GameState, player: Player) {
 }
 
 fn new_heat_map(size: Size) -> HeatMapTiles {
-    let mut res: HeatMapTiles = Tiles::new(size);
+    let mut res: HeatMapTiles = Tiles::with_size(size);
 
     update_heat_map_incrementally(&mut res, board::base_pos(Player::Red, size), Player::Red);
     update_heat_map_incrementally(&mut res, board::base_pos(Player::Blue, size), Player::Blue);
@@ -96,7 +96,7 @@ fn new_heat_map(size: Size) -> HeatMapTiles {
 }
 
 fn new_moves_map(size: Size) -> BoolTiles {
-    Tiles::new(size)
+    Tiles::with_size(size)
 }
 
 #[allow(clippy::new_without_default)]
