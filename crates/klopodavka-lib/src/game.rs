@@ -64,15 +64,12 @@ fn update_heat_map_incrementally(
 ) {
     map[pos].set(player, max_val);
 
-    let mut visited: BoolTiles = Tiles::with_size(map.size());
-
     let mut pending: Vec<Pos> = Vec::new();
     pending.push(pos);
 
     let enemy = player.other();
 
     while let Some(pos) = pending.pop() {
-        visited[pos] = true;
         let pos_heat = map[pos].get(player);
 
         let neighb_heat = match board[pos] {
@@ -82,11 +79,6 @@ fn update_heat_map_incrementally(
             other => panic!("unexpected tile: {:?}", other),
         };
 
-        // TODO: This is somehow wrong, because we sometimes find a better path to a given tile,
-        // but that tile is already visited, so we don't update.
-        // Because we must use a priority queue instead of a stack.
-        // TODO: This is too similar to path finding, how can we reuse?
-        // Provide different cost func, and limit path length, and pass cost map?
         for neighb in board::neighbors(pos, map.size()) {
             let tile = board[neighb];
 
@@ -95,10 +87,7 @@ fn update_heat_map_incrementally(
                 && tile != Tile::Base(enemy)
             {
                 map[neighb].set(player, neighb_heat);
-
-                if !visited[neighb] {
-                    pending.push(neighb);
-                }
+                pending.push(neighb);
             }
         }
     }
