@@ -147,6 +147,8 @@ fn weight(game: &GameState, pos: Pos, include_base_dist: bool) -> u16 {
     weight as u16
 }
 
+// TODO: Move path finding to a separate module, so it can be used for things like
+// path highlighting and win detection within the game.
 fn find_path(game: &GameState) -> Option<impl Iterator<Item = Pos>> {
     find_path_ex(
         game,
