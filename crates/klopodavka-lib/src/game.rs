@@ -62,7 +62,7 @@ fn update_heat_map_incrementally(
     pos: Pos,
     player: Player,
 ) {
-    map[pos].set(player, max_val + 1);
+    map[pos].set(player, max_val);
 
     let mut visited: BoolTiles = Tiles::with_size(map.size());
 
@@ -73,7 +73,14 @@ fn update_heat_map_incrementally(
 
     while let Some(pos) = pending.pop() {
         visited[pos] = true;
-        let neighb_heat = map[pos].get(player) - 1;
+        let pos_heat = map[pos].get(player);
+
+        let neighb_heat = match board[pos] {
+            Tile::Empty => pos_heat - 1,
+            Tile::Alive(pl) if pl == enemy => pos_heat - 1,
+            Tile::Alive(pl) | Tile::Squashed(pl) | Tile::Base(pl) if pl == player => pos_heat,
+            other => panic!("unexpected tile: {:?}", other),
+        };
 
         for neighb in board::neighbors(pos, map.size()) {
             let tile = board[neighb];
@@ -371,7 +378,7 @@ mod tests {
         let game = GameState::new();
         let pos = base_pos(Player::Red, game.board.size());
 
-        assert_eq!(game.heat(pos).red, (TURN_LENGTH + 1) as u8);
+        assert_eq!(game.heat(pos).red, game.turn_length as u8);
 
         assert_eq!(game.heat(pos).blue, 0);
 
