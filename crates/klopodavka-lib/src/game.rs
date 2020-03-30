@@ -1,21 +1,22 @@
 use crate::board;
+use crate::board::Board;
 use crate::models::*;
 use std::fmt;
 
 pub const TURN_LENGTH: u8 = 6;
 
-pub type BoolTiles = [[bool; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
+pub type BoolTiles = Tiles<bool>;
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Default)]
 pub struct HeatMapTile {
     pub red: u8,
     pub blue: u8,
 }
 
-type HeatMapTiles = [[HeatMapTile; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
+type HeatMapTiles = Tiles<HeatMapTile>;
 
 pub struct GameState {
-    board: Tiles,
+    board: Board,
     current_player: Player,
     turn_length: u32,
     moves_left: u32,
@@ -31,10 +32,10 @@ fn update_moves(game: &mut GameState) {
         .splice(0.., board::moves(&game.board, game.current_player));
 
     // Reallocate map - faster than clean/update.
-    game.moves_map = [[false; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
+    game.moves_map = Tiles::new(game.board.size());
 
     for pos in game.moves.iter() {
-        game.moves_map[pos.x as usize][pos.y as usize] = true;
+        game.moves_map.setp(pos, true);
     }
 }
 

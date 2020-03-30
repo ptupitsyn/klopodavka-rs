@@ -35,37 +35,51 @@ impl Tile {
     }
 }
 
+impl Default for Tile {
+    fn default() -> Self {
+        Tile::Empty
+    }
+}
+
 /// Board size alias.
 pub type Bsize = u16;
 
 pub const BASE_OFFSET: Bsize = 2;
 
 #[derive(Debug, Clone)]
-pub struct Tiles {
-    tiles: Vec<Tile>,
-    width: Bsize,
-    height: Bsize,
+pub struct Tiles<T: Default> {
+    tiles: Vec<T>,
+    size: Size,
 }
 
-impl Tiles {
+impl<T: Default> Tiles<T> {
     pub fn new_default() -> Self {
-        Tiles::new(30, 30)
+        Tiles::new(Size {
+            width: 30,
+            height: 30,
+        })
     }
 
-    pub fn new(width: Bsize, height: Bsize) -> Self {
+    pub fn new(size: Size) -> Self {
         Tiles {
-            width,
-            height,
-            tiles: [0..width * height].iter().map(|_| Tile::Empty).collect(),
+            size,
+            tiles: [0..size.width * size.height]
+                .iter()
+                .map(|_| T::default())
+                .collect(),
         }
     }
 
-    pub fn get(&self, x: Bsize, y: Bsize) -> Option<Tile> {
-        self.index(x, y).map(|i| self.tiles[i])
+    pub fn get(&self, x: Bsize, y: Bsize) -> Option<T> {
+        self.idx(x, y).map(|i| self.tiles[i])
     }
 
-    pub fn set(&mut self, x: Bsize, y: Bsize, tile: Tile) -> Result<(), ()> {
-        match self.index(x, y) {
+    pub fn getp(&self, pos: Pos) -> Option<T> {
+        self.get(pos.x, pos.y)
+    }
+
+    pub fn set(&mut self, x: Bsize, y: Bsize, tile: T) -> Result<(), ()> {
+        match self.idx(x, y) {
             None => Result::Err(()),
             Some(idx) => {
                 self.tiles[idx] = tile;
@@ -74,9 +88,20 @@ impl Tiles {
         }
     }
 
-    fn index(&self, x: Bsize, y: Bsize) -> Option<usize> {
-        if x >= 0 && x < self.width && y >= 0 && y < self.height {
-            let index = self.width * y + x;
+    #[inline]
+    pub fn setp(&mut self, pos: Pos, tile: T) -> Result<(), ()> {
+        self.set(pos.x, pos.y, tile)
+    }
+
+    #[inline]
+    pub fn size(&self) -> Size {
+        self.size
+    }
+
+    #[inline]
+    fn idx(&self, x: Bsize, y: Bsize) -> Option<usize> {
+        if x >= 0 && x < self.size.width && y >= 0 && y < self.size.height {
+            let index = self.size.width * y + x;
 
             Some(index as usize)
         } else {
@@ -89,6 +114,12 @@ impl Tiles {
 pub struct Pos {
     pub x: Bsize,
     pub y: Bsize,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub struct Size {
+    pub width: Bsize,
+    pub height: Bsize,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
