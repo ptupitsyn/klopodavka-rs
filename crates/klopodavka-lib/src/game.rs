@@ -13,7 +13,7 @@ pub struct HeatMapTile {
     pub blue: u8,
 }
 
-type HeatMapTiles = Tiles<HeatMapTile>;
+type HeatMap = Tiles<HeatMapTile>;
 
 pub struct GameState {
     board: Board,
@@ -22,7 +22,7 @@ pub struct GameState {
     moves_left: u32,
     moves: Vec<Pos>,
     moves_map: BoolTiles,
-    heat_map: HeatMapTiles,
+    heat_map: HeatMap,
     pub disable_heat_map: bool,
 }
 
@@ -39,10 +39,16 @@ fn update_moves(game: &mut GameState) {
     }
 }
 
-fn update_heat_map_incrementally(map: &mut HeatMapTiles, pos: Pos, player: Player) {
-    let max_val = TURN_LENGTH;
+fn update_heat_map_incrementally(
+    map: &mut HeatMap,
+    board: &Board,
+    max_val: u8,
+    pos: Pos,
+    player: Player,
+) {
+    let enemy = player.other();
 
-    let get = |p, m: &HeatMapTiles| {
+    let get = |p, m: &HeatMap| {
         if player == Player::Red {
             m[p].red
         } else {
@@ -50,7 +56,7 @@ fn update_heat_map_incrementally(map: &mut HeatMapTiles, pos: Pos, player: Playe
         }
     };
 
-    let set = |p, m: &mut HeatMapTiles, h| {
+    let set = |p, m: &mut HeatMap, h| {
         if player == Player::Red {
             m[p].red = h;
         } else {
@@ -69,7 +75,12 @@ fn update_heat_map_incrementally(map: &mut HeatMapTiles, pos: Pos, player: Playe
         let neighb_heat = get(pos, map) - 1;
 
         for neighb in board::neighbors(pos, map.size()) {
-            if neighb_heat > get(neighb, map) {
+            let tile = board[neighb];
+
+            if neighb_heat > get(neighb, map)
+                && tile != Tile::Squashed(enemy)
+                && tile != Tile::Base(enemy)
+            {
                 set(neighb, map, neighb_heat);
 
                 if !visited[neighb] {
@@ -91,17 +102,14 @@ fn update_heat_map_fully(game: &mut GameState, player: Player) {
     }
 
     for connected_tile_pos in board::connected_tiles(&game.board, player, false) {
-        update_heat_map_incrementally(map, connected_tile_pos, player);
+        update_heat_map_incrementally(
+            &mut game.heat_map,
+            &game.board,
+            game.turn_length as u8,
+            connected_tile_pos,
+            player,
+        );
     }
-}
-
-fn new_heat_map(size: Size) -> HeatMapTiles {
-    let mut res: HeatMapTiles = Tiles::with_size(size);
-
-    update_heat_map_incrementally(&mut res, board::base_pos(Player::Red, size), Player::Red);
-    update_heat_map_incrementally(&mut res, board::base_pos(Player::Blue, size), Player::Blue);
-
-    res
 }
 
 fn new_moves_map(size: Size) -> BoolTiles {
@@ -126,9 +134,12 @@ impl GameState {
             moves_left: turn_length,
             moves_map: new_moves_map(size),
             moves: Vec::with_capacity(64),
-            heat_map: new_heat_map(size),
+            heat_map: Tiles::with_size(size),
             disable_heat_map: false,
         };
+
+        update_heat_map_fully(&mut res, Player::Red);
+        update_heat_map_fully(&mut res, Player::Blue);
 
         update_moves(&mut res);
 
@@ -193,25 +204,33 @@ impl GameState {
     }
 
     pub fn make_move(&mut self, pos: Pos) {
+        let player = self.current_player;
+
         let valid = self.is_valid_move(pos);
         if !valid {
             panic!(
                 "Invalid move: {:?} ({:?} -> {:?})",
                 pos,
                 self.tile(pos),
-                self.current_player
+                player
             );
         }
 
-        board::make_move(&mut self.board, self.current_player, pos.x, pos.y);
+        board::make_move(&mut self.board, player, pos.x, pos.y);
 
         if !self.disable_heat_map {
-            update_heat_map_incrementally(&mut self.heat_map, pos, self.current_player);
+            update_heat_map_incrementally(
+                &mut self.heat_map,
+                &self.board,
+                self.turn_length as u8,
+                pos,
+                player,
+            );
 
             if self.tile(pos).is_squashed() {
                 // Squash move causes ownership change and possible branch disconnect,
                 // full recompute is required for the other player tiles.
-                update_heat_map_fully(self, self.current_player.other());
+                update_heat_map_fully(self, player.other());
             }
         }
 
@@ -226,7 +245,7 @@ impl GameState {
         self.moves_left = left;
 
         if last {
-            self.current_player = self.current_player.other();
+            self.current_player = player.other();
         }
 
         update_moves(self);
