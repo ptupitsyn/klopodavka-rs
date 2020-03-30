@@ -44,27 +44,27 @@ fn render_tile(app: &App, pos: Pos) -> Html {
                 let blue = heat_map_color(heat.blue, app.game.max_heat());
                 let rgb = format!("background-color: rgb({}, 250, {})", blue, red);
 
-                ("", rgb)
+                (format!("{}:{}", heat.red, heat.blue).to_string(), rgb)
             } else {
-                ("", "".to_string())
+                ("".to_string(), "".to_string())
             }
         }
-        Tile::Base(Player::Red) => ("🏠", "background-color: #ff9999".to_string()),
-        Tile::Base(Player::Blue) => ("🏠", "background-color: #80b3ff".to_string()),
-        Tile::Alive(Player::Red) => ("", "background-color: #ff9999".to_string()),
-        Tile::Alive(Player::Blue) => ("", "background-color: #80b3ff".to_string()),
-        Tile::Squashed(Player::Red) => ("", "background-color: #cc0000".to_string()),
-        Tile::Squashed(Player::Blue) => ("", "background-color: #005ce6".to_string()),
+        Tile::Base(Player::Red) => ("🏠".to_string(), "background-color: #ff9999".to_string()),
+        Tile::Base(Player::Blue) => ("🏠".to_string(), "background-color: #80b3ff".to_string()),
+        Tile::Alive(Player::Red) => ("".to_string(), "background-color: #ff9999".to_string()),
+        Tile::Alive(Player::Blue) => ("".to_string(), "background-color: #80b3ff".to_string()),
+        Tile::Squashed(Player::Red) => ("".to_string(), "background-color: #cc0000".to_string()),
+        Tile::Squashed(Player::Blue) => ("".to_string(), "background-color: #005ce6".to_string()),
     };
 
     if app.game.is_valid_move(pos) {
-        text = "·";
+        text.push_str("·");
 
         style.push_str("; cursor: pointer");
 
-        render_tile_avail(text, style.as_str(), app, pos)
+        render_tile_avail(text.as_str(), style.as_str(), app, pos)
     } else {
-        render_tile_nonavail(text, style.as_str())
+        render_tile_nonavail(text.as_str(), style.as_str())
     }
 }
 

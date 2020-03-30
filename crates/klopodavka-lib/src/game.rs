@@ -82,6 +82,8 @@ fn update_heat_map_incrementally(
             other => panic!("unexpected tile: {:?}", other),
         };
 
+        // TODO: This is somehow wrong, because we sometimes find a better path to a given tile,
+        // but that tile is already visited, so we don't update.
         for neighb in board::neighbors(pos, map.size()) {
             let tile = board[neighb];
 
