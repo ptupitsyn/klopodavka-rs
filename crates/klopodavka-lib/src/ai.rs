@@ -159,7 +159,7 @@ fn cost(game: &GameState, pos: Pos, tile: Tile, player: Player) -> u16 {
 
 #[cfg(test)]
 mod tests {
-    use crate::ai::{cost, get_ai_move, get_ai_move_with_mode, AiMode};
+    use crate::ai::{cost, get_ai_move_with_mode, AiMode};
     use crate::models::{Player, Pos};
     use crate::path::{find_path, find_path_ex};
     use crate::{board, game};

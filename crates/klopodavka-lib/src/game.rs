@@ -40,34 +40,43 @@ fn update_moves(game: &mut GameState) {
 }
 
 fn update_heat_map_incrementally(map: &mut HeatMapTiles, pos: Pos, player: Player) {
-    let old = map[pos];
     let max_val = TURN_LENGTH;
 
-    map[pos] = match player {
-        Player::Red => HeatMapTile {
-            red: max_val + 1,
-            blue: old.blue,
-        },
-        Player::Blue => HeatMapTile {
-            red: old.red,
-            blue: max_val + 1,
-        },
+    let get = |p, m: &HeatMapTiles| {
+        if player == Player::Red {
+            m[p].red
+        } else {
+            m[p].blue
+        }
     };
 
-    for pos2 in board::neighbors_dist(pos, map.size(), max_val) {
-        let old = map[pos2];
-        let heat = max_val + 1 - board::dist(pos, pos2) as u8;
+    let set = |p, m: &mut HeatMapTiles, h| {
+        if player == Player::Red {
+            m[p].red = h;
+        } else {
+            m[p].blue = h;
+        }
+    };
 
-        map[pos2] = match player {
-            Player::Red => HeatMapTile {
-                blue: old.blue,
-                red: std::cmp::max(old.red, heat),
-            },
-            Player::Blue => HeatMapTile {
-                blue: std::cmp::max(old.blue, heat),
-                red: old.red,
-            },
-        };
+    set(pos, map, max_val + 1);
+
+    let mut visited: BoolTiles = Tiles::with_size(map.size());
+    let mut pending: Vec<Pos> = Vec::new();
+    pending.push(pos);
+
+    while let Some(pos) = pending.pop() {
+        visited[pos] = true;
+        let neighb_heat = get(pos, map) - 1;
+
+        for neighb in board::neighbors(pos, map.size()) {
+            if neighb_heat > get(neighb, map) {
+                set(neighb, map, neighb_heat);
+
+                if !visited[neighb] {
+                    pending.push(neighb);
+                }
+            }
+        }
     }
 }
 
