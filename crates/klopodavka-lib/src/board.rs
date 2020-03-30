@@ -16,7 +16,7 @@ pub fn base_pos(p: Player, size: Size) -> Pos {
 }
 
 pub fn pos_iter(size: Size) -> impl Iterator<Item = Pos> {
-    (0..size.width).flat_map(|x| (0..size.height).map(move |y| Pos { x, y }))
+    (0..size.width).flat_map(move |x| (0..size.height).map(move |y| Pos { x, y }))
 }
 
 pub fn create_board() -> Board {

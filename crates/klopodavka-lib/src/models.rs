@@ -49,12 +49,12 @@ pub type Bsize = u16;
 pub const BASE_OFFSET: Bsize = 2;
 
 #[derive(Debug, Clone)]
-pub struct Tiles<T: Default> {
+pub struct Tiles<T: Default + Copy> {
     tiles: Vec<T>,
     size: Size,
 }
 
-impl<T: Default> Tiles<T> {
+impl<T: Default + Copy> Tiles<T> {
     pub fn new_default() -> Self {
         Tiles::new(Size {
             width: 30,
@@ -102,7 +102,7 @@ impl<T: Default> Tiles<T> {
 
     #[inline]
     fn idx(&self, x: Bsize, y: Bsize) -> Option<usize> {
-        if x >= 0 && x < self.size.width && y >= 0 && y < self.size.height {
+        if x < self.size.width && y < self.size.height {
             let index = self.size.width * y + x;
 
             Some(index as usize)
@@ -112,15 +112,16 @@ impl<T: Default> Tiles<T> {
     }
 }
 
-impl<T: Default> Index<Pos> for Tiles<T> {
+impl<T: Default + Copy> Index<Pos> for Tiles<T> {
     type Output = T;
 
     fn index(&self, index: Pos) -> &Self::Output {
-        &self.getp(index).expect("valid pos")
+        let idx = self.idx(index.x, index.y).expect("valid pos");
+        &self.tiles[idx]
     }
 }
 
-impl<T: Default> IndexMut<Pos> for Tiles<T> {
+impl<T: Default + Copy> IndexMut<Pos> for Tiles<T> {
     fn index_mut(&mut self, index: Pos) -> &mut Self::Output {
         let idx = self.idx(index.x, index.y).expect("valid pos");
         &mut self.tiles[idx]

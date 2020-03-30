@@ -1,8 +1,8 @@
 use crate::board;
 use crate::board::dist;
-use crate::game::GameState;
+use crate::game::{BoolTiles, GameState};
 use crate::models::Tile::Squashed;
-use crate::models::{Player, Pos, Tile, TilePos};
+use crate::models::{Player, Pos, Tile, TilePos, Tiles};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 
@@ -117,23 +117,24 @@ fn weight(game: &GameState, pos: Pos, include_base_dist: bool) -> u16 {
     // * Neighbor count - less is better
     // * Diagonal - true is better
     // * Enemy base distance - less is better
+    let size = game.size();
 
-    let nonempty_neighbs = board::neighbors(pos)
+    let nonempty_neighbs = board::neighbors(pos, size)
         .filter(|n| !game.tile(*n).is_empty())
         .count();
 
-    let diag_neighbs = board::neighbors(pos)
+    let diag_neighbs = board::neighbors(pos, size)
         .filter(|n| n.x != pos.x && n.y != pos.y && !game.tile(*n).is_empty())
         .count();
 
     let nondiag_neighbs = nonempty_neighbs - diag_neighbs;
 
-    let is_edge =
-        if pos.x == 0 || pos.y == 0 || pos.x == BOARD_WIDTH - 1 || pos.y == BOARD_HEIGHT - 1 {
-            1
-        } else {
-            0
-        };
+    let is_edge = if pos.x == 0 || pos.y == 0 || pos.x == size.width - 1 || pos.y == size.height - 1
+    {
+        1
+    } else {
+        0
+    };
 
     let base_dist = if include_base_dist {
         let enemy_base = game.enemy_base();
@@ -179,25 +180,26 @@ fn find_path_ex(
     });
 
     // List of visited nodes.
-    let mut visited = [[false; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
+    let size = game.size();
+    let mut visited: BoolTiles = Tiles::new(size);
 
     // "Parent" nodes map - allows us to reconstruct the path from start to given pos.
-    let mut came_from = [[None as Option<Pos>; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
+    let mut came_from: Tiles<Option<Pos>> = Tiles::new(size);
 
     // For node n, gScore[n] is the cost of the cheapest path from start to n currently known.
-    let mut g_score = [[std::u64::MAX; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
-    g_score[start.x as usize][start.y as usize] = 0;
+    let mut g_score: Tiles<u64> = Tiles::new(size);
+    g_score[start] = 0;
 
     while let Some(current) = heap.pop() {
-        visited[current.pos.x as usize][current.pos.y as usize] = true;
+        visited[current.pos] = true;
 
-        for neighb in board::neighbors(current.pos) {
+        for neighb in board::neighbors(current.pos, size) {
             if neighb == end {
                 // Target reached, return results.
                 let mut res_pos = current.pos;
 
                 let iter = std::iter::from_fn(move || {
-                    if let Some(prev) = came_from[res_pos.x as usize][res_pos.y as usize] {
+                    if let Some(prev) = came_from[res_pos] {
                         let res = Some(res_pos);
                         res_pos = prev;
                         return res;
@@ -253,16 +255,16 @@ fn find_path_ex(
                 continue;
             }
 
-            let cur_score = g_score[current.pos.x as usize][current.pos.y as usize];
+            let cur_score = g_score[current.pos];
             let neighb_score = cur_score + neighb_cost as u64;
-            let old_neighb_score = g_score[neighb.x as usize][neighb.y as usize];
+            let old_neighb_score = g_score[neighb];
 
             if neighb_score < old_neighb_score {
                 // Found a better path through neigb, record it.
-                came_from[neighb.x as usize][neighb.y as usize] = Some(current.pos);
-                g_score[neighb.x as usize][neighb.y as usize] = neighb_score;
+                came_from[neighb] = Some(current.pos);
+                g_score[neighb] = neighb_score;
 
-                if !visited[neighb.x as usize][neighb.y as usize] {
+                if !visited[neighb] {
                     heap.push(PosCost {
                         pos: neighb,
                         cost: neighb_score as u32 + dist(neighb, end) as u32,

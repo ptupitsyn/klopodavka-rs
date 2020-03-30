@@ -72,7 +72,7 @@ fn update_heat_map_incrementally(map: &mut HeatMapTiles, pos: Pos, player: Playe
 }
 
 fn update_heat_map_fully(game: &mut GameState, player: Player) {
-    let mut map = &mut game.heat_map;
+    let map = &mut game.heat_map;
 
     for pos in board::pos_iter(map.size()) {
         match player {
@@ -107,6 +107,7 @@ impl GameState {
 
     pub fn new_custom(turn_length: u32) -> Self {
         let tiles = board::create_board();
+        let size = tiles.size();
         let player = Player::Red;
 
         let mut res = GameState {
@@ -114,9 +115,9 @@ impl GameState {
             current_player: player,
             turn_length,
             moves_left: turn_length,
-            moves_map: new_moves_map(tiles.size()),
+            moves_map: new_moves_map(size),
             moves: Vec::with_capacity(64),
-            heat_map: new_heat_map(tiles.size()),
+            heat_map: new_heat_map(size),
             disable_heat_map: false,
         };
 
@@ -163,6 +164,10 @@ impl GameState {
 
     pub fn enemy_base(&self) -> Pos {
         board::base_pos(self.current_player.other(), self.board.size())
+    }
+
+    pub fn size(&self) -> Size {
+        self.board.size()
     }
 
     pub fn winner(&self) -> Option<Player> {
@@ -255,7 +260,6 @@ impl std::fmt::Display for GameState {
 
 #[cfg(test)]
 mod tests {
-    use crate::board;
     use crate::board::base_pos;
     use crate::game::{GameState, TURN_LENGTH};
     use crate::models::Tile::Alive;

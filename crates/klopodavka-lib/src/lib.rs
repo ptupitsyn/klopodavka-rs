@@ -21,7 +21,7 @@ mod tests {
         }
 
         println!("Tile size: {}", mem::size_of::<Tile>());
-        println!("Tiles size: {}", mem::size_of::<Tiles>());
+        println!("Tiles size: {}", mem::size_of::<Tiles<Tile>>());
 
         println!("{}", game);
     }
