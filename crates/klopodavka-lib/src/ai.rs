@@ -61,6 +61,7 @@ fn attack_move(game: &GameState) -> Option<Pos> {
                 pos: p,
                 tile: Squashed(player),
             }),
+            cost,
         )
         .map_or(std::u32::MAX, |p| p.count() as u32)
     };
@@ -148,6 +149,22 @@ fn weight(game: &GameState, pos: Pos, include_base_dist: bool) -> u16 {
     weight as u16
 }
 
+fn cost(game: &GameState, pos: Pos, tile: Tile, player: Player) -> u16 {
+    match tile {
+        // Moving into empty tile is not as good as squashing.
+        Tile::Empty => (1 + weight(game, pos, false)) * 3,
+
+        // Tile belongs to the player and does not cost anything.
+        Tile::Alive(p) | Tile::Squashed(p) if p == player => 0,
+
+        // Other player tile is at min cost, squashing is preferred.
+        Tile::Alive(p) if p == player.other() => 1,
+
+        // All the rest is forbidden.
+        _ => std::u16::MAX,
+    }
+}
+
 // TODO: Move path finding to a separate module, so it can be used for things like
 // path highlighting and win detection within the game.
 fn find_path(game: &GameState) -> Option<impl Iterator<Item = Pos>> {
@@ -157,6 +174,7 @@ fn find_path(game: &GameState) -> Option<impl Iterator<Item = Pos>> {
         game.current_base(),
         game.enemy_base(),
         None,
+        cost,
     )
 }
 
@@ -167,6 +185,7 @@ fn find_path_ex(
     start: Pos,
     end: Pos,
     tile_override: Option<TilePos>,
+    cost_fn: impl Fn(&GameState, Pos, Tile, Player) -> u16,
 ) -> Option<impl Iterator<Item = Pos>> {
     if start == end {
         return None;
@@ -237,19 +256,7 @@ fn find_path_ex(
                 _ => game.tile(neighb),
             };
 
-            let neighb_cost = match tile {
-                // Moving into empty tile is not as good as squashing.
-                Tile::Empty => (1 + weight(game, neighb, false)) * 3,
-
-                // Tile belongs to the player and does not cost anything.
-                Tile::Alive(p) | Tile::Squashed(p) if p == player => 0,
-
-                // Other player tile is at min cost, squashing is preferred.
-                Tile::Alive(p) if p == player.other() => 1,
-
-                // All the rest is forbidden.
-                _ => std::u16::MAX,
-            };
+            let neighb_cost = cost_fn(game, neighb, tile, player);
 
             if neighb_cost == std::u16::MAX {
                 continue;
@@ -279,7 +286,7 @@ fn find_path_ex(
 
 #[cfg(test)]
 mod tests {
-    use crate::ai::{find_path, find_path_ex, get_ai_move};
+    use crate::ai::{cost, find_path, find_path_ex, get_ai_move};
     use crate::models::{Player, Pos};
     use crate::{board, game};
     use rand::seq::IteratorRandom;
@@ -315,7 +322,7 @@ mod tests {
         let end = game.enemy_base();
         let player = game.current_player();
 
-        let path: Vec<Pos> = find_path_ex(&game, player, start, end, None)
+        let path: Vec<Pos> = find_path_ex(&game, player, start, end, None, cost)
             .expect("path is expected")
             .collect();
 
@@ -354,7 +361,7 @@ mod tests {
         };
         let player = game.current_player();
 
-        let path: Vec<Pos> = find_path_ex(&game, player, start, end, None)
+        let path: Vec<Pos> = find_path_ex(&game, player, start, end, None, cost)
             .expect("path is expected")
             .collect();
 
@@ -365,7 +372,7 @@ mod tests {
     fn find_path_returns_none_for_same_start_end() {
         let game = game::GameState::new();
         let pos = game.current_base();
-        let path = find_path_ex(&game, game.current_player(), pos, pos, None);
+        let path = find_path_ex(&game, game.current_player(), pos, pos, None, cost);
 
         assert!(path.is_none());
     }
