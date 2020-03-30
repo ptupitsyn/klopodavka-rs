@@ -38,6 +38,7 @@ pub fn moves(game: &GameState) -> impl Iterator<Item = TilePos> + '_ {
 }
 
 pub fn get_ai_move(game: &GameState) -> Option<Pos> {
+    // TODO: Returns all moves for the current turn at once.
     if game.moves().is_empty() {
         return Option::None;
     }
@@ -65,7 +66,6 @@ fn attack_move(game: &GameState) -> Option<Pos> {
     };
 
     // TODO: Use moves plus any reachable enemy tiles for better cutoff (use heatmap??)
-    // TODO: Add path caching based on game.turn_number()
     moves(game)
         .filter(|&t| t.tile.is_alive())
         .max_by(|a, b| cost(a.pos).cmp(&cost(b.pos)))
