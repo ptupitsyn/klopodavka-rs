@@ -60,6 +60,11 @@ fn attack_move(game: &GameState, mode: AiMode) -> Option<Pos> {
 
     // Use heat map to find reachable tile that is the most important for the enemy,
     // then squash that tile.
+    // TODO: Something is wrong here.
+    // To debug, add:
+    // * Dump board button
+    // * import_board from string (should include size as well somehow)
+    // * write specific test cases with imported boards
     game.tiles()
         .filter(|&t| t.tile == Tile::Alive(enemy) && game.heat(t.pos).get(player) > 0)
         .max_by(|a, b| enemy_cost(a.pos).cmp(&enemy_cost(b.pos)))
