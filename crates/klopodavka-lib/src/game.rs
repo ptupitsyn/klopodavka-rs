@@ -35,17 +35,15 @@ fn update_moves(game: &mut GameState) {
     game.moves_map = Tiles::new(game.board.size());
 
     for pos in game.moves.iter() {
-        game.moves_map.setp(pos, true);
+        game.moves_map.setp(*pos, true);
     }
 }
 
 fn update_heat_map_incrementally(map: &mut HeatMapTiles, pos: Pos, player: Player) {
-    let (x, y) = (pos.x as usize, pos.y as usize);
-
-    let old = map[x][y];
+    let old = map.getp(pos);
     let max_val = TURN_LENGTH;
 
-    map[x][y] = match player {
+    map[pos] = match player {
         Player::Red => HeatMapTile {
             red: max_val + 1,
             blue: old.blue,

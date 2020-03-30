@@ -2,7 +2,7 @@ use crate::board;
 use crate::board::dist;
 use crate::game::GameState;
 use crate::models::Tile::Squashed;
-use crate::models::{Player, Pos, Tile, TilePos, BOARD_HEIGHT, BOARD_WIDTH};
+use crate::models::{Player, Pos, Tile, TilePos};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
 

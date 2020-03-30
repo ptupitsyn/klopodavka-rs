@@ -1,3 +1,5 @@
+use std::ops::{Index, IndexMut};
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Player {
     Red,
@@ -107,6 +109,21 @@ impl<T: Default> Tiles<T> {
         } else {
             None
         }
+    }
+}
+
+impl<T: Default> Index<Pos> for Tiles<T> {
+    type Output = T;
+
+    fn index(&self, index: Pos) -> &Self::Output {
+        &self.getp(index).expect("valid pos")
+    }
+}
+
+impl<T: Default> IndexMut<Pos> for Tiles<T> {
+    fn index_mut(&mut self, index: Pos) -> &mut Self::Output {
+        let idx = self.idx(index.x, index.y).expect("valid pos");
+        &mut self.tiles[idx]
     }
 }
 

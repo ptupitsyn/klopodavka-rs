@@ -24,7 +24,7 @@ pub fn create_board() -> Board {
 
     fn place_base(p: Player, t: &mut Board) {
         let pos = base_pos(p, t.size());
-        t.setp(pos, Tile::Base(p)).expect("Base pos is valid");
+        t[pos] = Tile::Base(p);
     }
 
     place_base(Player::Red, &mut res);
@@ -82,10 +82,10 @@ pub fn connected_tiles(
     // Traverse the tree of connected tiles and return all reachable empty tiles.
     std::iter::from_fn(move || {
         while let Some(pos) = stack.pop() {
-            if visited.getp(pos) == Some(true) {
-                visited.setp(pos, true);
+            if !visited[pos] {
+                visited[pos] = true;
 
-                let tile = board.getp(pos).expect("Valid pos expected");
+                let tile = board[pos];
 
                 if tile == Tile::Empty || tile == Tile::Alive(enemy) {
                     if return_potential_moves {
@@ -132,7 +132,7 @@ mod tests {
         for x in 0..board.size().width {
             for y in 0..board.size().height {
                 let pos = Pos { x, y };
-                let tile = board.getp(pos).expect("tile");
+                let tile = board[pos];
                 if pos == base_red {
                     assert_eq!(tile, Tile::Base(Player::Red));
                 } else if pos == base_blue {
