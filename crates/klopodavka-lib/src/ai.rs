@@ -3,6 +3,12 @@ use crate::models::Tile::Squashed;
 use crate::models::{Player, Pos, Tile, TilePos};
 use crate::{board, path};
 
+#[derive(Debug, Copy, Clone, PartialEq)]
+pub enum AiMode {
+    Basic,
+    Advanced,
+}
+
 pub fn moves(game: &GameState) -> impl Iterator<Item = TilePos> + '_ {
     game.moves().iter().map(move |&pos| TilePos {
         pos,
@@ -11,15 +17,27 @@ pub fn moves(game: &GameState) -> impl Iterator<Item = TilePos> + '_ {
 }
 
 pub fn get_ai_move(game: &GameState) -> Option<Pos> {
+    get_ai_move_with_mode(game, AiMode::Advanced)
+}
+
+pub fn get_ai_move_with_mode(game: &GameState, mode: AiMode) -> Option<Pos> {
     // TODO: Returns all moves for the current turn at once.
     if game.moves().is_empty() {
         return Option::None;
     }
 
-    attack_move(game).or_else(|| advance_move(game))
+    attack_move(game, mode).or_else(|| advance_move(game, mode))
 }
 
-fn attack_move(game: &GameState) -> Option<Pos> {
+fn attack_move(game: &GameState, mode: AiMode) -> Option<Pos> {
+    if mode == AiMode::Basic {
+        return game
+            .moves()
+            .iter()
+            .find(|&&p| game.tile(p).is_alive())
+            .copied();
+    }
+
     let player = game.current_player();
     let enemy = player.other();
 
@@ -46,49 +64,50 @@ fn attack_move(game: &GameState) -> Option<Pos> {
         .map(|p| p.pos)
 }
 
-fn advance_move(game: &GameState) -> Option<Pos> {
-    let has_squashed = game.tiles().any(|t| t.tile.is_squashed());
+fn advance_move(game: &GameState, mode: AiMode) -> Option<Pos> {
+    if mode == AiMode::Advanced {
+        let has_squashed = game.tiles().any(|t| t.tile.is_squashed());
 
-    if !has_squashed {
-        // Return random diagonal move when fight has not yet started.
-        // Note: this is quite slow.
-        let moves: Vec<&Pos> = game
-            .moves()
-            .iter()
-            .filter(|&&pos| weight(game, pos, false) == 1)
-            .collect();
+        if !has_squashed {
+            // Return random diagonal move when fight has not yet started.
+            // Note: this is quite slow.
+            let moves: Vec<&Pos> = game
+                .moves()
+                .iter()
+                .filter(|&&pos| weight(game, pos, false) == 1)
+                .collect();
 
-        if !moves.is_empty() {
-            // There is no Random or Time on wasm-unknown target (???), they panic,
-            // use this sum as a pseudo-random number.
-            let empty_tiles_pos_sum: usize = game
-                .tiles()
-                .filter(|t| t.tile.is_empty())
-                .map(|t| t.pos.y as usize + t.pos.x as usize)
-                .sum();
+            if !moves.is_empty() {
+                // There is no Random or Time on wasm-unknown target (???), they panic,
+                // use this sum as a pseudo-random number.
+                let empty_tiles_pos_sum: usize = game
+                    .tiles()
+                    .filter(|t| t.tile.is_empty())
+                    .map(|t| t.pos.y as usize + t.pos.x as usize)
+                    .sum();
 
-            return moves
-                .get(empty_tiles_pos_sum % moves.len())
-                .copied()
-                .copied();
+                return moves
+                    .get(empty_tiles_pos_sum % moves.len())
+                    .copied()
+                    .copied();
+            }
+        }
+
+        // Rush to enemy base with path finding.
+        if let Some(pos) = path::find_path_ex(
+            game,
+            game.current_player(),
+            game.current_base(),
+            game.enemy_base(),
+            None,
+            cost,
+        )
+        .and_then(|i| i.filter(|&p| game.is_valid_move(p)).last())
+        {
+            return Some(pos);
         }
     }
 
-    // Rush to enemy base with path finding.
-    if let Some(pos) = path::find_path_ex(
-        game,
-        game.current_player(),
-        game.current_base(),
-        game.enemy_base(),
-        None,
-        cost,
-    )
-    .and_then(|i| i.filter(|&p| game.is_valid_move(p)).last())
-    {
-        return Some(pos);
-    }
-
-    // Path not found, just do something, we have probably lost at this point.
     game.moves()
         .iter()
         .min_by(|&&x, &&y| weight(game, x, true).cmp(&weight(game, y, true)))
@@ -140,20 +159,20 @@ fn cost(game: &GameState, pos: Pos, tile: Tile, player: Player) -> u16 {
 
 #[cfg(test)]
 mod tests {
-    use crate::ai::{cost, get_ai_move};
+    use crate::ai::{cost, get_ai_move, get_ai_move_with_mode, AiMode};
     use crate::models::{Player, Pos};
     use crate::path::{find_path, find_path_ex};
     use crate::{board, game};
     use rand::seq::IteratorRandom;
 
     #[test]
-    fn ai_wins_against_random() {
+    fn basic_ai_wins_against_random() {
         let mut game = game::GameState::new();
         let ai_player = Player::Red;
 
         while !game.moves().is_empty() {
             let pos = if game.current_player() == ai_player {
-                get_ai_move(&game)
+                get_ai_move_with_mode(&game, AiMode::Basic)
                     .expect("get_ai_move returns something when game.moves() is not empty")
             } else {
                 *game
