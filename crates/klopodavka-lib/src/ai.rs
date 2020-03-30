@@ -42,7 +42,7 @@ fn attack_move(game: &GameState, mode: AiMode) -> Option<Pos> {
     let enemy = player.other();
 
     // TODO: Use better cost instead of count()
-    let cost = |p| {
+    let enemy_cost = |p| {
         path::find_path_ex(
             game,
             enemy,
@@ -57,13 +57,13 @@ fn attack_move(game: &GameState, mode: AiMode) -> Option<Pos> {
         .map_or(std::u32::MAX, |p| p.count() as u32)
     };
 
-    // TODO: Use moves plus any reachable enemy tiles for better cutoff (use heatmap??)
-    // game.tiles().filter(|&t| t.tile == Tile::Alive(enemy) && game.heat(t.pos).)
-
-    moves(game)
-        .filter(|&t| t.tile.is_alive())
-        .max_by(|a, b| cost(a.pos).cmp(&cost(b.pos)))
-        .map(|p| p.pos)
+    // Use heat map to find reachable tile that is the most important for the enemy,
+    // then squash that tile.
+    game.tiles()
+        .filter(|&t| t.tile == Tile::Alive(enemy) && game.heat(t.pos).get(player) > 0)
+        .max_by(|a, b| enemy_cost(a.pos).cmp(&enemy_cost(b.pos)))
+        .and_then(|p| path::find_path_ex(game, player, game.current_base(), p.pos, None, cost))
+        .and_then(|iter| iter.last())
 }
 
 fn advance_move(game: &GameState, mode: AiMode) -> Option<Pos> {

@@ -14,7 +14,7 @@ pub struct HeatMapTile {
 }
 
 impl HeatMapTile {
-    fn get(self, player: Player) -> u8 {
+    pub fn get(self, player: Player) -> u8 {
         match player {
             Player::Red => self.red,
             Player::Blue => self.blue,
