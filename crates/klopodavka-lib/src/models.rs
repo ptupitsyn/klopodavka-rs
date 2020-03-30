@@ -35,19 +35,60 @@ impl Tile {
     }
 }
 
-pub const BOARD_WIDTH: u16 = 30;
+/// Board size alias.
+pub type Bsize = u16;
 
-pub const BOARD_HEIGHT: u16 = 30;
+pub const BASE_OFFSET: Bsize = 2;
 
-pub const BASE_OFFSET: u16 = 2;
+#[derive(Debug, Clone)]
+pub struct Tiles {
+    tiles: Vec<Tile>,
+    width: Bsize,
+    height: Bsize,
+}
 
-// TODO: Encapsulate board behind a type, with size, set and get
-pub type Tiles = [[Tile; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
+impl Tiles {
+    pub fn new_default() -> Self {
+        Tiles::new(30, 30)
+    }
+
+    pub fn new(width: Bsize, height: Bsize) -> Self {
+        Tiles {
+            width,
+            height,
+            tiles: [0..width * height].iter().map(|_| Tile::Empty).collect(),
+        }
+    }
+
+    pub fn get(&self, x: Bsize, y: Bsize) -> Option<Tile> {
+        self.index(x, y).map(|i| self.tiles[i])
+    }
+
+    pub fn set(&mut self, x: Bsize, y: Bsize, tile: Tile) -> Result<(), ()> {
+        match self.index(x, y) {
+            None => Result::Err(()),
+            Some(idx) => {
+                self.tiles[idx] = tile;
+                Result::Ok(())
+            }
+        }
+    }
+
+    fn index(&self, x: Bsize, y: Bsize) -> Option<usize> {
+        if x >= 0 && x < self.width && y >= 0 && y < self.height {
+            let index = self.width * y + x;
+
+            Some(index as usize)
+        } else {
+            None
+        }
+    }
+}
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct Pos {
-    pub x: u16,
-    pub y: u16,
+    pub x: Bsize,
+    pub y: Bsize,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq)]
