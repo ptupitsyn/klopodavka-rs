@@ -66,7 +66,7 @@ fn attack_move(game: &GameState, mode: AiMode) -> Option<Pos> {
         .and_then(|p| {
             path::find_path_ex(game, player, game.current_base(), p.pos, None, cost_default)
         })
-        .and_then(|iter| iter.filter(|&p| game.is_valid_move(p)).last())
+        .and_then(|mut iter| iter.find(|&p| game.is_valid_move(p)))
 }
 
 fn advance_move(game: &GameState, mode: AiMode) -> Option<Pos> {
