@@ -63,10 +63,17 @@ impl<T: Default + Copy> Tiles<T> {
     }
 
     pub fn new(size: Size) -> Self {
+        let min = BASE_OFFSET * 2;
+        if size.width < min || size.height < min {
+            panic!(
+                "Board size is too small: {} by {}. Should be at least {} by {}",
+                size.width, size.height, min, min
+            );
+        }
+
         Tiles {
             size,
-            tiles: [0..size.width * size.height]
-                .iter()
+            tiles: (0..size.width * size.height)
                 .map(|_| T::default())
                 .collect(),
         }
