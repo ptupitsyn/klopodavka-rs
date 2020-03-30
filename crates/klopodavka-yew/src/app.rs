@@ -90,7 +90,7 @@ fn render_tile_nonavail(text: &str, style: &str) -> Html {
 fn render_row(app: &App, y: u16) -> Html {
     html! {
         <tr>
-            { (0.. BOARD_WIDTH).map(|x| render_tile(app, Pos {x, y})).collect::<Html>() }
+            { (0.. app.game.size().width).map(|x| render_tile(app, Pos {x, y})).collect::<Html>() }
         </tr>
     }
 }
@@ -104,12 +104,14 @@ impl Component for App {
         let callback_tick = link.callback(|_| Msg::Tick);
         let handle = interval.spawn(Duration::from_millis(150), callback_tick.clone());
         let tick_handle = Box::new(handle);
+        let game = game::GameState::new();
+        let size = game.size();
 
         App {
-            game: game::GameState::new(),
-            cell_click: (0..BOARD_WIDTH)
+            game,
+            cell_click: (0..size.width)
                 .map(|x| {
-                    (0..BOARD_HEIGHT)
+                    (0..size.height)
                         .map(|y| link.callback(move |_| Msg::MakeMove(Pos { x, y })))
                         .collect()
                 })
@@ -155,15 +157,15 @@ impl Component for App {
     }
 
     fn view(&self) -> Html {
-        let g = &self.game;
+        let game = &self.game;
 
-        let status = if let Some(winner) = g.winner() {
+        let status = if let Some(winner) = game.winner() {
             format!("Game over, {:?} won!", winner)
         } else {
             format!(
                 "Player: {:?} | Clicks: {}",
-                g.current_player(),
-                g.moves_left()
+                game.current_player(),
+                game.moves_left()
             )
         };
 
@@ -187,7 +189,7 @@ impl Component for App {
 
                     <p>
                         <table>
-                            { (0.. BOARD_HEIGHT).map(|y| render_row(&self, y)).collect::<Html>() }
+                            { (0.. game.size().height).map(|y| render_row(&self, y)).collect::<Html>() }
                         </table>
                     </p>
                 </div>

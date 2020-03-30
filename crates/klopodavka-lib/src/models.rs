@@ -80,18 +80,13 @@ impl<T: Default + Copy> Tiles<T> {
         self.get(pos.x, pos.y)
     }
 
-    pub fn set(&mut self, x: Bsize, y: Bsize, tile: T) -> Result<(), ()> {
-        match self.idx(x, y) {
-            None => Result::Err(()),
-            Some(idx) => {
-                self.tiles[idx] = tile;
-                Result::Ok(())
-            }
-        }
+    pub fn set(&mut self, x: Bsize, y: Bsize, tile: T) {
+        let idx = self.idx(x, y).expect("Invalid position");
+        self.tiles[idx] = tile
     }
 
     #[inline]
-    pub fn setp(&mut self, pos: Pos, tile: T) -> Result<(), ()> {
+    pub fn setp(&mut self, pos: Pos, tile: T) {
         self.set(pos.x, pos.y, tile)
     }
 
