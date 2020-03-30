@@ -40,7 +40,7 @@ fn update_moves(game: &mut GameState) {
 }
 
 fn update_heat_map_incrementally(map: &mut HeatMapTiles, pos: Pos, player: Player) {
-    let old = map.getp(pos);
+    let old = map[pos];
     let max_val = TURN_LENGTH;
 
     map[pos] = match player {
@@ -54,12 +54,11 @@ fn update_heat_map_incrementally(map: &mut HeatMapTiles, pos: Pos, player: Playe
         },
     };
 
-    for pos2 in board::neighbors_dist(pos, max_val) {
-        let (x, y) = (pos2.x as usize, pos2.y as usize);
-        let old = map[x][y];
+    for pos2 in board::neighbors_dist(pos, map.size(), max_val) {
+        let old = map[pos2];
         let heat = max_val + 1 - board::dist(pos, pos2) as u8;
 
-        map[x][y] = match player {
+        map[pos2] = match player {
             Player::Red => HeatMapTile {
                 blue: old.blue,
                 red: std::cmp::max(old.red, heat),
@@ -75,10 +74,10 @@ fn update_heat_map_incrementally(map: &mut HeatMapTiles, pos: Pos, player: Playe
 fn update_heat_map_fully(game: &mut GameState, player: Player) {
     let mut map = &mut game.heat_map;
 
-    for (x, y) in board::pos_iter() {
+    for pos in board::pos_iter(map.size()) {
         match player {
-            Player::Red => map[x][y].red = 0,
-            Player::Blue => map[x][y].blue = 0,
+            Player::Red => map[pos].red = 0,
+            Player::Blue => map[pos].blue = 0,
         };
     }
 
@@ -87,17 +86,17 @@ fn update_heat_map_fully(game: &mut GameState, player: Player) {
     }
 }
 
-fn new_heat_map() -> HeatMapTiles {
-    let mut res = [[HeatMapTile { blue: 0, red: 0 }; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize];
+fn new_heat_map(size: Size) -> HeatMapTiles {
+    let mut res: HeatMapTiles = Tiles::new(size);
 
-    update_heat_map_incrementally(&mut res, board::base_pos(Player::Red), Player::Red);
-    update_heat_map_incrementally(&mut res, board::base_pos(Player::Blue), Player::Blue);
+    update_heat_map_incrementally(&mut res, board::base_pos(Player::Red, size), Player::Red);
+    update_heat_map_incrementally(&mut res, board::base_pos(Player::Blue, size), Player::Blue);
 
     res
 }
 
-fn new_moves_map() -> BoolTiles {
-    [[false; BOARD_HEIGHT as usize]; BOARD_WIDTH as usize]
+fn new_moves_map(size: Size) -> BoolTiles {
+    Tiles::new(size)
 }
 
 #[allow(clippy::new_without_default)]
@@ -115,9 +114,9 @@ impl GameState {
             current_player: player,
             turn_length,
             moves_left: turn_length,
-            moves_map: new_moves_map(),
+            moves_map: new_moves_map(tiles.size()),
             moves: Vec::with_capacity(64),
-            heat_map: new_heat_map(),
+            heat_map: new_heat_map(tiles.size()),
             disable_heat_map: false,
         };
 
@@ -127,11 +126,11 @@ impl GameState {
     }
 
     pub fn tile(&self, pos: Pos) -> Tile {
-        self.board[pos.x as usize][pos.y as usize]
+        self.board[pos]
     }
 
     pub fn heat(&self, pos: Pos) -> HeatMapTile {
-        self.heat_map[pos.x as usize][pos.y as usize]
+        self.heat_map[pos]
     }
 
     pub fn max_heat(&self) -> u8 {
@@ -139,15 +138,10 @@ impl GameState {
     }
 
     pub fn tiles(&self) -> impl Iterator<Item = TilePos> + '_ {
-        board::pos_iter()
-            .map(|(x, y)| Pos {
-                x: x as u16,
-                y: y as u16,
-            })
-            .map(move |pos| TilePos {
-                pos,
-                tile: self.tile(pos),
-            })
+        board::pos_iter(self.board.size()).map(move |pos| TilePos {
+            pos,
+            tile: self.tile(pos),
+        })
     }
 
     pub fn moves(&self) -> &Vec<Pos> {
@@ -155,7 +149,7 @@ impl GameState {
     }
 
     pub fn is_valid_move(&self, pos: Pos) -> bool {
-        self.moves_map[pos.x as usize][pos.y as usize]
+        self.moves_map[pos]
     }
 
     pub fn current_player(&self) -> Player {
@@ -163,11 +157,12 @@ impl GameState {
     }
 
     pub fn current_base(&self) -> Pos {
-        board::base_pos(self.current_player)
+        // TODO: Cache?
+        board::base_pos(self.current_player, self.board.size())
     }
 
     pub fn enemy_base(&self) -> Pos {
-        board::base_pos(self.current_player.other())
+        board::base_pos(self.current_player.other(), self.board.size())
     }
 
     pub fn winner(&self) -> Option<Player> {
@@ -241,9 +236,9 @@ impl std::fmt::Display for GameState {
         let mut res = String::new();
 
         #[allow(clippy::needless_range_loop)]
-        for y in 0..BOARD_HEIGHT {
-            for x in 0..BOARD_WIDTH {
-                let tile = self.board[x as usize][y as usize];
+        for y in 0..self.board.size().height {
+            for x in 0..self.board.size().width {
+                let tile = self.board.get(x, y).expect("valid tile");
                 let ch = get_ch(tile);
                 res.push(ch);
             }
@@ -277,9 +272,9 @@ mod tests {
     fn create_game_returns_new_game_state() {
         let game = GameState::new();
 
-        let tiles = game.board.iter().flat_map(|r| r.iter());
+        let tiles = game.tiles();
         for tile in tiles {
-            match tile {
+            match tile.tile {
                 Tile::Empty | Tile::Base(_) => {}
                 Tile::Alive(_) => panic!("Alive tile on new board"),
                 Tile::Squashed(_) => panic!("Squashed tile on new board"),
@@ -297,9 +292,8 @@ mod tests {
     #[should_panic]
     fn make_move_panics_on_invalid_move_to_base() {
         let mut game = GameState::new();
-        let pos = board::base_pos(game.current_player);
 
-        game.make_move(pos);
+        game.make_move(game.current_base());
     }
 
     #[test]
@@ -313,15 +307,12 @@ mod tests {
     #[test]
     fn make_move_updates_board_and_move_count() {
         let mut game = GameState::new();
-        let base_pos = board::base_pos(game.current_player);
+        let base_pos = game.current_base();
         let pos = Pos::new(base_pos.x, base_pos.y + 1);
         game.make_move(pos);
 
         assert_eq!(game.moves_left, game.turn_length - 1);
-        assert_eq!(
-            game.board[pos.x as usize][pos.y as usize],
-            Alive(game.current_player)
-        );
+        assert_eq!(game.board[pos], Alive(game.current_player));
     }
 
     #[test]
@@ -345,7 +336,7 @@ mod tests {
     #[test]
     fn create_game_returns_new_game_state_with_heat_map() {
         let game = GameState::new();
-        let pos = base_pos(Player::Red);
+        let pos = base_pos(Player::Red, game.board.size());
 
         assert_eq!(game.heat(pos).red, (TURN_LENGTH + 1) as u8);
 
