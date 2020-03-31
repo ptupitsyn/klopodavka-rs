@@ -59,8 +59,8 @@ pub fn neighbors(pos: Pos, size: Size) -> impl Iterator<Item = Pos> {
 pub fn neighbors_dist(pos: Pos, size: Size, dist: u8) -> impl Iterator<Item = Pos> + 'static {
     let (w, h) = (size.width as i32, size.height as i32);
     let (x, y) = (pos.x as i32, pos.y as i32);
-    let n = dist as i32;
-    let range = -n..n + 1;
+    let idist = dist as i32;
+    let range = -idist..idist + 1;
 
     range
         .clone()
