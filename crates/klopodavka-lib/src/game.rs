@@ -71,7 +71,6 @@ impl GameState {
     }
 
     fn init(&mut self) {
-        // TODO: Convert those to member fn
         self.update_heat_map_fully(Player::Red);
         self.update_heat_map_fully(Player::Blue);
 
