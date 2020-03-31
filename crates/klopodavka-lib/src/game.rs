@@ -46,11 +46,16 @@ pub struct GameState {
 #[allow(clippy::new_without_default)]
 impl GameState {
     pub fn new() -> Self {
-        GameState::new_custom(TURN_LENGTH as u32)
+        let size = Size {
+            width: 30,
+            height: 30,
+        };
+
+        GameState::new_custom(TURN_LENGTH as u32, size)
     }
 
-    pub fn new_custom(turn_length: u32) -> Self {
-        let tiles = board::create_board();
+    pub fn new_custom(turn_length: u32, size: Size) -> Self {
+        let tiles = board::create_board_with_size(size);
         let size = tiles.size();
         let player = Player::Red;
 

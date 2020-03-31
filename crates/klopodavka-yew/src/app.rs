@@ -12,6 +12,7 @@ pub struct App {
     console: ConsoleService,
     show_advanced_controls: bool,
     disable_ai: bool,
+    board_size: Bsize,
 
     #[allow(dead_code)]
     callback_tick: Callback<()>,
@@ -119,6 +120,7 @@ impl Component for App {
                     .collect()
             })
             .collect();
+        let size = game.size().width;
 
         App {
             link,
@@ -129,6 +131,7 @@ impl Component for App {
             tick_handle,
             show_advanced_controls: false,
             disable_ai: false,
+            board_size: size,
         }
     }
 
@@ -166,8 +169,13 @@ impl Component for App {
             }
 
             Msg::NewGame => {
-                self.console.info("New game");
-                self.game = game::GameState::new();
+                let size = Size {
+                    width: self.board_size,
+                    height: self.board_size,
+                };
+
+                self.game = game::GameState::new_custom(6, size);
+
                 true
             }
 
@@ -242,6 +250,8 @@ impl Component for App {
                                 </label>
                                 <button class="button" onclick=self.link.callback(|_| Msg::MakeAiMove)>{ "Make AI Move" }</button>
                                 <button class="button" onclick=self.link.callback(|_| Msg::Dump)>{ "Dump" }</button>
+                                { " Size:" }
+                                <input type="number" value=&self.board_size />
                             </div>
                         }
                     } else {
