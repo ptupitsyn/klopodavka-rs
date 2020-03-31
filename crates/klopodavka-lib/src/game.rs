@@ -31,6 +31,7 @@ impl HeatMapTile {
 
 type HeatMap = Tiles<HeatMapTile>;
 
+#[derive(Debug, PartialEq)]
 pub struct GameState {
     board: Board,
     current_player: Player,
@@ -224,19 +225,23 @@ impl GameState {
         let header = re.captures(&str).expect("Invalid header");
 
         let get = |idx| header.get(idx).unwrap().as_str();
-        let parse = |idx| get(idx).parse::<Bsize>().unwrap();
+        let parse = |idx| {
+            let str = get(idx);
+            str.parse::<Bsize>()
+                .unwrap_or_else(|_| panic!("Invalid number: {}", str))
+        };
 
         let size = Size {
-            width: parse(0),
-            height: parse(1),
+            width: parse(1),
+            height: parse(2),
         };
 
         let mut tiles = board::create_board_with_size(size);
 
-        let moves_left = parse(2);
-        let turn_length = parse(3);
+        let moves_left = parse(3);
+        let turn_length = parse(4);
 
-        let player = if get(4) == "Red" {
+        let player = if get(5) == "Red" {
             Player::Red
         } else {
             Player::Blue
@@ -244,7 +249,9 @@ impl GameState {
 
         for (y, line) in str.split('\n').skip(1).enumerate() {
             for (x, c) in line.chars().enumerate() {
+                // TODO: Chars to constants
                 let tile = match c {
+                    '·' => Tile::Empty,
                     'E' => Tile::Base(Player::Red),
                     'L' => Tile::Base(Player::Blue),
                     'r' => Tile::Alive(Player::Red),
@@ -480,5 +487,14 @@ mod tests {
             .red,
             0
         );
+    }
+
+    #[test]
+    fn serialize_deserialize_returns_same_state() {
+        let game = GameState::new();
+        let ser = game.serialize();
+        let game2 = GameState::deserialize(ser);
+
+        assert_eq!(game, game2);
     }
 }

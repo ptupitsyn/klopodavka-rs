@@ -48,20 +48,13 @@ pub type Bsize = u16;
 
 pub const BASE_OFFSET: Bsize = 2;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Tiles<T: Default + Copy> {
     tiles: Vec<T>,
     size: Size,
 }
 
 impl<T: Default + Copy> Tiles<T> {
-    pub fn new() -> Self {
-        Tiles::with_size(Size {
-            width: 30,
-            height: 30,
-        })
-    }
-
     pub fn with_size(size: Size) -> Self {
         Tiles::with_size_and_val(size, T::default())
     }
