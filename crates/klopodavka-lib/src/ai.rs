@@ -43,6 +43,7 @@ fn attack_move(game: &GameState, mode: AiMode) -> Option<Pos> {
     let enemy = player.other();
 
     // TODO: Use better cost instead of count()
+    // TODO: Count only empty tiles!
     let enemy_cost = |p| {
         path::find_path_ex(
             game,
@@ -60,18 +61,33 @@ fn attack_move(game: &GameState, mode: AiMode) -> Option<Pos> {
 
     // Use heat map to find reachable tile that is the most important for the enemy,
     // then squash that tile.
-    // TODO: Something is wrong here.
-    // To debug, add:
-    // * Dump board button
-    // * import_board from string (should include size as well somehow)
-    // * write specific test cases with imported boards
-    game.tiles()
+    // TODO: Remove redundant vectors, convert to a single expr.
+    let mut filtered: Vec<(TilePos, u32)> = game
+        .tiles()
         .filter(|&t| t.tile == Tile::Alive(enemy) && game.heat(t.pos).get(player) > 0)
-        .max_by(|a, b| enemy_cost(a.pos).cmp(&enemy_cost(b.pos)))
-        .and_then(|p| {
-            path::find_path_ex(game, player, game.current_base(), p.pos, None, cost_default)
-        })
-        .and_then(|mut iter| iter.find(|&p| game.is_valid_move(p)))
+        .map(|t| (t, enemy_cost(t.pos)))
+        .collect();
+
+    filtered.sort_by(|&a, &b| a.1.cmp(&b.1));
+
+    let best = filtered.last().copied().unwrap().0.pos;
+
+    if game.is_valid_move(best) {
+        return Some(best);
+    }
+
+    let path: Vec<Pos> =
+        path::find_path_ex(game, player, game.current_base(), best, None, cost_default)
+            .unwrap()
+            .collect();
+
+    let valid_path_moves: Vec<Pos> = path
+        .iter()
+        .filter(|&&p| game.is_valid_move(p))
+        .copied()
+        .collect();
+
+    valid_path_moves.first().copied()
 }
 
 fn advance_move(game: &GameState, mode: AiMode) -> Option<Pos> {
