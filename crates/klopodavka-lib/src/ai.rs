@@ -27,10 +27,12 @@ pub fn get_ai_move_with_mode(game: &GameState, mode: AiMode) -> Option<Pos> {
         return Option::None;
     }
 
-    attack_move(game, mode).or_else(|| advance_move(game, mode))
+    let has_squashed = game.tiles().any(|t| t.tile.is_squashed());
+
+    attack_move(game, mode, has_squashed).or_else(|| advance_move(game, mode, has_squashed))
 }
 
-fn attack_move(game: &GameState, mode: AiMode) -> Option<Pos> {
+fn attack_move(game: &GameState, mode: AiMode, has_squashed: bool) -> Option<Pos> {
     if mode == AiMode::Basic {
         return game
             .moves()
@@ -59,11 +61,20 @@ fn attack_move(game: &GameState, mode: AiMode) -> Option<Pos> {
         })
     };
 
+    // When squashing has not yet started, avoid far attacks.
+    let attack_threshold = if has_squashed {
+        1
+    } else {
+        game.max_heat() / 2 + 1
+    };
+
     // Use heat map to find reachable tile that is the most important for the enemy,
     // then squash that tile.
     let best_move = game
         .tiles()
-        .filter(|&t| t.tile == Tile::Alive(enemy) && game.heat(t.pos).get(player) > 0)
+        .filter(|&t| {
+            t.tile == Tile::Alive(enemy) && game.heat(t.pos).get(player) >= attack_threshold
+        })
         .map(|t| (t, enemy_cost(t.pos)))
         .max_by(|&a, &b| a.1.cmp(&b.1));
 
@@ -85,10 +96,8 @@ fn attack_move(game: &GameState, mode: AiMode) -> Option<Pos> {
     .find(|&p| game.is_valid_move(p))
 }
 
-fn advance_move(game: &GameState, mode: AiMode) -> Option<Pos> {
+fn advance_move(game: &GameState, mode: AiMode, has_squashed: bool) -> Option<Pos> {
     if mode == AiMode::Advanced {
-        let has_squashed = game.tiles().any(|t| t.tile.is_squashed());
-
         if !has_squashed {
             // Return random diagonal move when fight has not yet started.
             // Note: this is quite slow.
