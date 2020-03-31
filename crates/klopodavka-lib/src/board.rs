@@ -20,7 +20,14 @@ pub fn pos_iter(size: Size) -> impl Iterator<Item = Pos> {
 }
 
 pub fn create_board() -> Board {
-    let mut res = Tiles::new();
+    create_board_with_size(Size {
+        width: 30,
+        height: 30,
+    })
+}
+
+pub fn create_board_with_size(size: Size) -> Board {
+    let mut res = Tiles::with_size(size);
 
     fn place_base(p: Player, t: &mut Board) {
         let pos = base_pos(p, t.size());

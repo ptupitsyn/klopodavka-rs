@@ -220,17 +220,49 @@ impl GameState {
     }
 
     pub fn deserialize(str: String) -> Self {
-        let turn_length = 0; // TODO
-        let moves_left = 0; // TODO
-        let tiles = board::create_board(); // TODO
-        let size = tiles.size(); // TODO
-        let player = Player::Red; // TODO
+        let re = regex::Regex::new(r"(\d+)x(\d+),(\d+)/(\d+),(\w+)\n").unwrap();
+        let header = re.captures(&str).expect("Invalid header");
+
+        let get = |idx| header.get(idx).unwrap().as_str();
+        let parse = |idx| get(idx).parse::<Bsize>().unwrap();
+
+        let size = Size {
+            width: parse(0),
+            height: parse(1),
+        };
+
+        let mut tiles = board::create_board_with_size(size);
+
+        let moves_left = parse(2);
+        let turn_length = parse(3);
+
+        let player = if get(4) == "Red" {
+            Player::Red
+        } else {
+            Player::Blue
+        };
+
+        for (y, line) in str.split('\n').skip(1).enumerate() {
+            for (x, c) in line.chars().enumerate() {
+                let tile = match c {
+                    'E' => Tile::Base(Player::Red),
+                    'L' => Tile::Base(Player::Blue),
+                    'r' => Tile::Alive(Player::Red),
+                    'R' => Tile::Squashed(Player::Red),
+                    'b' => Tile::Alive(Player::Blue),
+                    'B' => Tile::Squashed(Player::Blue),
+                    other => panic!("Invalid char: {}", other),
+                };
+
+                tiles.set(x as Bsize, y as Bsize, tile);
+            }
+        }
 
         let mut res = GameState {
             board: tiles,
             current_player: player,
-            turn_length,
-            moves_left: moves_left,
+            turn_length: turn_length as u32,
+            moves_left: moves_left as u32,
             moves_map: GameState::new_moves_map(size),
             moves: Vec::with_capacity(64),
             heat_map: Tiles::with_size(size),
