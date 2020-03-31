@@ -6,13 +6,12 @@ use yew::prelude::*;
 use yew::services::{ConsoleService, IntervalService, Task};
 
 pub struct App {
-    new_game_click: Callback<ClickEvent>,
-    rust_logo_click: Callback<ClickEvent>,
-    dump_click: Callback<ClickEvent>,
+    link: ComponentLink<Self>,
     cell_click: Vec<Vec<Callback<ClickEvent>>>,
     game: GameState,
     console: ConsoleService,
     show_advanced_controls: bool,
+    disable_ai: bool,
 
     #[allow(dead_code)]
     callback_tick: Callback<()>,
@@ -23,10 +22,12 @@ pub struct App {
 
 pub enum Msg {
     MakeMove(Pos),
+    MakeAiMove,
     NewGame,
     Tick,
-    ShowHideAdvancedControls,
+    ToggleAdvancedControls,
     Dump,
+    ToggleAi,
 }
 
 fn heat_map_color(heat: u8, max_heat: u8) -> u8 {
@@ -111,23 +112,23 @@ impl Component for App {
         let tick_handle = Box::new(handle);
         let game = game::GameState::new();
         let size = game.size();
+        let click_map = (0..size.width)
+            .map(|x| {
+                (0..size.height)
+                    .map(|y| link.callback(move |_| Msg::MakeMove(Pos { x, y })))
+                    .collect()
+            })
+            .collect();
 
         App {
+            link,
             game,
-            cell_click: (0..size.width)
-                .map(|x| {
-                    (0..size.height)
-                        .map(|y| link.callback(move |_| Msg::MakeMove(Pos { x, y })))
-                        .collect()
-                })
-                .collect(),
-            new_game_click: link.callback(|_| Msg::NewGame),
+            cell_click: click_map,
             console: ConsoleService::new(),
             callback_tick,
             tick_handle,
             show_advanced_controls: false,
-            rust_logo_click: link.callback(|_| Msg::ShowHideAdvancedControls),
-            dump_click: link.callback(|_| Msg::Dump),
+            disable_ai: false,
         }
     }
 
@@ -136,8 +137,28 @@ impl Component for App {
 
         match msg {
             Msg::MakeMove(pos) => {
-                if game_state.current_player() == Player::Red {
+                if game_state.current_player() == Player::Red || self.disable_ai {
                     game_state.make_move(pos);
+                    true
+                } else {
+                    false
+                }
+            }
+
+            Msg::Tick => {
+                if game_state.current_player() == Player::Blue && !self.disable_ai {
+                    if let Some(m) = ai::get_ai_move(game_state) {
+                        game_state.make_move(m);
+                        return true;
+                    }
+                }
+
+                false
+            }
+
+            Msg::MakeAiMove => {
+                if let Some(m) = ai::get_ai_move(game_state) {
+                    game_state.make_move(m);
                     true
                 } else {
                     false
@@ -150,19 +171,7 @@ impl Component for App {
                 true
             }
 
-            Msg::Tick => {
-                if game_state.current_player() == Player::Blue {
-                    if let Some(m) = ai::get_ai_move(game_state) {
-                        self.console.info(format!("AI move: {:?}", m).as_str());
-                        game_state.make_move(m);
-                        return true;
-                    }
-                }
-
-                false
-            }
-
-            Msg::ShowHideAdvancedControls => {
+            Msg::ToggleAdvancedControls => {
                 self.show_advanced_controls = !self.show_advanced_controls;
                 true
             }
@@ -170,6 +179,11 @@ impl Component for App {
             Msg::Dump => {
                 let dump = self.game.serialize();
                 self.console.info(&dump);
+                false
+            }
+
+            Msg::ToggleAi => {
+                self.disable_ai = !self.disable_ai;
                 false
             }
         }
@@ -192,7 +206,7 @@ impl Component for App {
             <>
                 <div>
                     <div style="float: right">
-                        <img src="rust_logo.svg" alt="Rust Logo" style="width: 80px" onclick=&self.rust_logo_click />
+                        <img src="rust_logo.svg" alt="Rust Logo" style="width: 80px" onclick=self.link.callback(|_| Msg::ToggleAdvancedControls) />
                     </div>
                     <img src="logo.svg" alt="Klopodavka Logo" style="width: 640px"/>
                 </div>
@@ -203,7 +217,8 @@ impl Component for App {
                             html!
                             {
                                 <div>
-                                    <button class="button" onclick=&self.dump_click>{ "Dump" }</button>
+                                    <input type="checkbox" checked=self.disable_ai />
+                                    <button class="button" onclick=self.link.callback(|_| Msg::Dump)>{ "Dump" }</button>
                                 </div>
                             }
                         } else {
@@ -212,7 +227,7 @@ impl Component for App {
                     }
 
                     <div style="float: right">
-                        <button class="button" onclick=&self.new_game_click>{ "New Game" }</button>
+                        <button class="button" onclick=self.link.callback(|_| Msg::NewGame)>{ "New Game" }</button>
                     </div>
 
                     <div>
