@@ -1,3 +1,4 @@
+use crate::app::Msg::MakeMove;
 use klopodavka_lib::game::{GameState, HeatMapTile};
 use klopodavka_lib::models::*;
 use klopodavka_lib::{ai, game};
@@ -8,6 +9,7 @@ use yew::services::{ConsoleService, IntervalService, Task};
 pub struct App {
     new_game_click: Callback<ClickEvent>,
     rust_logo_click: Callback<ClickEvent>,
+    dump_click: Callback<ClickEvent>,
     cell_click: Vec<Vec<Callback<ClickEvent>>>,
     game: GameState,
     console: ConsoleService,
@@ -25,6 +27,7 @@ pub enum Msg {
     NewGame,
     Tick,
     ShowHideAdvancedControls,
+    Dump,
 }
 
 fn heat_map_color(heat: u8, max_heat: u8) -> u8 {
@@ -125,6 +128,7 @@ impl Component for App {
             tick_handle,
             show_advanced_controls: false,
             rust_logo_click: link.callback(|_| Msg::ShowHideAdvancedControls),
+            dump_click: link.callback(|_| Msg::Dump),
         }
     }
 
@@ -158,9 +162,16 @@ impl Component for App {
 
                 false
             }
+
             Msg::ShowHideAdvancedControls => {
                 self.show_advanced_controls = !self.show_advanced_controls;
                 true
+            }
+
+            Msg::Dump => {
+                let dump = self.game.serialize();
+                self.console.info(&dump);
+                false
             }
         }
     }
