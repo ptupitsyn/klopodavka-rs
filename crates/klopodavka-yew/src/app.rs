@@ -217,7 +217,11 @@ impl Component for App {
                             html!
                             {
                                 <div>
-                                    <input type="checkbox" checked=self.disable_ai />
+                                    <label>
+                                        <input type="checkbox" checked=self.disable_ai onclick=self.link.callback(|_| Msg::ToggleAi) />
+                                        { "Disable AI" }
+                                    </label>
+                                    <button class="button" onclick=self.link.callback(|_| Msg::MakeAiMove)>{ "Make AI Move" }</button>
                                     <button class="button" onclick=self.link.callback(|_| Msg::Dump)>{ "Dump" }</button>
                                 </div>
                             }
