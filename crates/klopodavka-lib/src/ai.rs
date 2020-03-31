@@ -29,10 +29,17 @@ pub fn get_ai_move_with_mode(game: &GameState, mode: AiMode) -> Option<Pos> {
 
     let has_squashed = game.tiles().any(|t| t.tile.is_squashed());
 
-    attack_move(game, mode, has_squashed).or_else(|| advance_move(game, mode, has_squashed))
+    let attack_threshold = if has_squashed {
+        1
+    } else {
+        game.max_heat() / 2 + 1
+    };
+
+    attack_move(game, mode, attack_threshold)
+        .or_else(|| advance_move(game, mode, has_squashed, attack_threshold))
 }
 
-fn attack_move(game: &GameState, mode: AiMode, has_squashed: bool) -> Option<Pos> {
+fn attack_move(game: &GameState, mode: AiMode, attack_threshold: u8) -> Option<Pos> {
     if mode == AiMode::Basic {
         return game
             .moves()
@@ -59,13 +66,6 @@ fn attack_move(game: &GameState, mode: AiMode, has_squashed: bool) -> Option<Pos
         .map_or(std::u32::MAX, |path| {
             path.filter(|&p| game.tile(p).is_empty()).count() as u32
         })
-    };
-
-    // When squashing has not yet started, avoid far attacks.
-    let attack_threshold = if has_squashed {
-        1
-    } else {
-        game.max_heat() / 2 + 1
     };
 
     // Use heat map to find reachable tile that is the most important for the enemy,
@@ -96,7 +96,12 @@ fn attack_move(game: &GameState, mode: AiMode, has_squashed: bool) -> Option<Pos
     .find(|&p| game.is_valid_move(p))
 }
 
-fn advance_move(game: &GameState, mode: AiMode, has_squashed: bool) -> Option<Pos> {
+fn advance_move(
+    game: &GameState,
+    mode: AiMode,
+    has_squashed: bool,
+    attack_threshold: u8,
+) -> Option<Pos> {
     if mode == AiMode::Advanced {
         if !has_squashed {
             // Return random diagonal move when fight has not yet started.
@@ -104,7 +109,11 @@ fn advance_move(game: &GameState, mode: AiMode, has_squashed: bool) -> Option<Po
             let moves: Vec<&Pos> = game
                 .moves()
                 .iter()
-                .filter(|&&pos| weight(game, pos, false) == 1)
+                .filter(|&&pos| {
+                    // Use heat to avoid moving close to the enemy.
+                    game.heat(pos).get(game.current_player().other()) < attack_threshold
+                        && weight(game, pos, false) == 1
+                })
                 .collect();
 
             if !moves.is_empty() {
