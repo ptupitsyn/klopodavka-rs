@@ -52,7 +52,7 @@ fn attack_move(game: &GameState, mode: AiMode) -> Option<Pos> {
                 pos: p,
                 tile: Squashed(player),
             }),
-            cost,
+            cost_default,
         )
         .map_or(std::u32::MAX, |path| {
             path.filter(|&p| game.tile(p).is_empty()).count() as u32
@@ -70,7 +70,7 @@ fn attack_move(game: &GameState, mode: AiMode) -> Option<Pos> {
 
     filtered.sort_by(|&a, &b| a.1.cmp(&b.1));
 
-    let best = filtered.last().copied().unwrap().0.pos;
+    let best = filtered.last().copied()?.0.pos;
 
     if game.is_valid_move(best) {
         return Some(best);
@@ -311,6 +311,6 @@ mod tests {
 
         let pos = get_ai_move(&game).unwrap();
 
-        assert_eq!(pos, Pos { x: 5, y: 15 });
+        assert_eq!(pos, Pos { x: 9, y: 11 });
     }
 }
