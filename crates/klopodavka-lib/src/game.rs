@@ -140,12 +140,16 @@ impl GameState {
             disable_heat_map: false,
         };
 
-        update_heat_map_fully(&mut res, Player::Red);
-        update_heat_map_fully(&mut res, Player::Blue);
-
-        update_moves(&mut res);
+        res.init();
 
         res
+    }
+
+    fn init(&mut self) {
+        update_heat_map_fully(&mut self, Player::Red);
+        update_heat_map_fully(&mut self, Player::Blue);
+
+        update_moves(&mut self);
     }
 
     pub fn tile(&self, pos: Pos) -> Tile {
@@ -288,6 +292,29 @@ impl GameState {
         }
 
         buf
+    }
+
+    pub fn deserialize(str: String) -> Self {
+        let turn_length = 0; // TODO
+        let moves_left = 0; // TODO
+        let tiles = board::create_board(); // TODO
+        let size = tiles.size(); // TODO
+        let player = Player::Red; // TODO
+
+        let mut res = GameState {
+            board: tiles,
+            current_player: player,
+            turn_length,
+            moves_left: moves_left,
+            moves_map: new_moves_map(size),
+            moves: Vec::with_capacity(64),
+            heat_map: Tiles::with_size(size),
+            disable_heat_map: false,
+        };
+
+        res.init();
+
+        res
     }
 }
 
