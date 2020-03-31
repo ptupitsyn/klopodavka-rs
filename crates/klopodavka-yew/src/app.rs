@@ -212,24 +212,6 @@ impl Component for App {
                 </div>
 
                 <div>
-                    {
-                        if (self.show_advanced_controls) {
-                            html!
-                            {
-                                <div>
-                                    <label>
-                                        <input type="checkbox" checked=self.disable_ai onclick=self.link.callback(|_| Msg::ToggleAi) />
-                                        { "Disable AI" }
-                                    </label>
-                                    <button class="button" onclick=self.link.callback(|_| Msg::MakeAiMove)>{ "Make AI Move" }</button>
-                                    <button class="button" onclick=self.link.callback(|_| Msg::Dump)>{ "Dump" }</button>
-                                </div>
-                            }
-                        } else {
-                            html! {}
-                        }
-                    }
-
                     <div style="float: right">
                         <button class="button" onclick=self.link.callback(|_| Msg::NewGame)>{ "New Game" }</button>
                     </div>
@@ -248,6 +230,25 @@ impl Component for App {
                 <div>
                     <span>{"Source: "}</span><a href="https://github.com/ptupitsyn/klopodavka-rs"> { "github.com/ptupitsyn/klopodavka-rs" } </a>
                 </div>
+
+                {
+                    if (self.show_advanced_controls) {
+                        html!
+                        {
+                            <div style="margin-top: 20px;">
+                                <label>
+                                    <input type="checkbox" checked=self.disable_ai onclick=self.link.callback(|_| Msg::ToggleAi) />
+                                    { "Disable AI" }
+                                </label>
+                                <button class="button" onclick=self.link.callback(|_| Msg::MakeAiMove)>{ "Make AI Move" }</button>
+                                <button class="button" onclick=self.link.callback(|_| Msg::Dump)>{ "Dump" }</button>
+                            </div>
+                        }
+                    } else {
+                        html! {}
+                    }
+                }
+
             </>
         }
     }
