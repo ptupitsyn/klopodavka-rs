@@ -229,6 +229,28 @@ mod tests {
     }
 
     #[test]
+    fn advanced_ai_winds_against_basic() {
+        let mut game = game::GameState::new();
+        let advanced_player = Player::Red;
+
+        while !game.moves().is_empty() {
+            let ai_mode = if game.current_player() == advanced_player {
+                AiMode::Advanced
+            } else {
+                AiMode::Basic
+            };
+
+            let pos = get_ai_move_with_mode(&game, ai_mode)
+                .expect("Failed to get AI move while moves are available");
+
+            game.make_move(pos);
+        }
+
+        println!("{}", game);
+        assert_eq!(game.winner().expect("some winner"), advanced_player);
+    }
+
+    #[test]
     fn find_path_works_on_empty_board() {
         let game = game::GameState::new();
         let start = game.current_base();
