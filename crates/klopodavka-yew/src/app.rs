@@ -7,9 +7,11 @@ use yew::services::{ConsoleService, IntervalService, Task};
 
 pub struct App {
     new_game_click: Callback<ClickEvent>,
+    rust_logo_click: Callback<ClickEvent>,
     cell_click: Vec<Vec<Callback<ClickEvent>>>,
     game: GameState,
     console: ConsoleService,
+    show_advanced_controls: bool,
 
     #[allow(dead_code)]
     callback_tick: Callback<()>,
@@ -22,6 +24,7 @@ pub enum Msg {
     MakeMove(Pos),
     NewGame,
     Tick,
+    ShowHideAdvancedControls,
 }
 
 fn heat_map_color(heat: u8, max_heat: u8) -> u8 {
@@ -120,6 +123,8 @@ impl Component for App {
             console: ConsoleService::new(),
             callback_tick,
             tick_handle,
+            show_advanced_controls: false,
+            rust_logo_click: link.callback(|_| Msg::ShowHideAdvancedControls),
         }
     }
 
@@ -153,6 +158,10 @@ impl Component for App {
 
                 false
             }
+            Msg::ShowHideAdvancedControls => {
+                self.show_advanced_controls = !self.show_advanced_controls;
+                true
+            }
         }
     }
 
@@ -173,12 +182,25 @@ impl Component for App {
             <>
                 <div>
                     <div style="float: right">
-                        <img src="rust_logo.svg" alt="Rust Logo" style="width: 80px"/>
+                        <img src="rust_logo.svg" alt="Rust Logo" style="width: 80px" onclick=&self.rust_logo_click />
                     </div>
                     <img src="logo.svg" alt="Klopodavka Logo" style="width: 640px"/>
                 </div>
 
                 <div>
+                    {
+                        if (self.show_advanced_controls) {
+                            html!
+                            {
+                                <div>
+                                    <button class="button">{ "Dump" }</button>
+                                </div>
+                            }
+                        } else {
+                            html! {}
+                        }
+                    }
+
                     <div style="float: right">
                         <button class="button" onclick=&self.new_game_click>{ "New Game" }</button>
                     </div>
