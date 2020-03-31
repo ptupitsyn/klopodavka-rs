@@ -169,8 +169,8 @@ fn cost(game: &GameState, pos: Pos, tile: Tile, player: Player) -> u16 {
 
 #[cfg(test)]
 mod tests {
-    use crate::ai::{cost, get_ai_move_with_mode, AiMode};
-    use crate::models::{Player, Pos};
+    use crate::ai::{cost, get_ai_move, get_ai_move_with_mode, AiMode};
+    use crate::models::{Player, Pos, Size};
     use crate::path::{find_path, find_path_ex};
     use crate::{board, game};
     use rand::seq::IteratorRandom;
@@ -224,7 +224,13 @@ mod tests {
 
     #[test]
     fn find_path_returns_valid_moves() {
-        let mut game = game::GameState::new_custom(1000);
+        let mut game = game::GameState::new_custom(
+            1000,
+            Size {
+                width: 30,
+                height: 30,
+            },
+        );
 
         let mut path: Vec<Pos> = find_path(&game).expect("path is expected").collect();
 
@@ -259,5 +265,36 @@ mod tests {
         let path = find_path_ex(&game, game.current_player(), pos, pos, None, cost);
 
         assert!(path.is_none());
+    }
+
+    #[test]
+    fn make_ai_move_squashes_best_enemy_tile() {
+        let data = r"20x20,5/6,Blue
+····················
+····················
+·················L··
+················b···
+···············b····
+············rBb·b···
+···········rBR···b··
+··········rBb·······
+·········rBb········
+·········Br·········
+········Br··········
+········Br··········
+·······Br···········
+······Br············
+·····Br·············
+····Br··············
+···r················
+··E·················
+····················
+····················";
+
+        let game = game::GameState::deserialize(data.to_string());
+
+        let pos = get_ai_move(&game).unwrap();
+
+        assert_eq!(pos, Pos { x: 5, y: 15 });
     }
 }
