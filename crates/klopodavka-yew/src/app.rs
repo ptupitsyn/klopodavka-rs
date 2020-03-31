@@ -1,19 +1,35 @@
 use klopodavka_lib::game::{GameState, HeatMapTile};
 use klopodavka_lib::models::*;
 use klopodavka_lib::{ai, game};
+use std::time::Duration;
 use yew::prelude::*;
+use yew::services::{ConsoleService, IntervalService, Task};
 
 pub struct App {
-    ai_move_click: Callback<ClickEvent>,
-    new_game_click: Callback<ClickEvent>,
+    link: ComponentLink<Self>,
     cell_click: Vec<Vec<Callback<ClickEvent>>>,
     game: GameState,
+    console: ConsoleService,
+    show_advanced_controls: bool,
+    disable_ai: bool,
+    board_size: Bsize,
+
+    #[allow(dead_code)]
+    callback_tick: Callback<()>,
+
+    #[allow(dead_code)]
+    tick_handle: Box<dyn Task>,
 }
 
 pub enum Msg {
-    MakeAiMove,
     MakeMove(Pos),
+    MakeAiMove,
     NewGame,
+    Tick,
+    ToggleAdvancedControls,
+    Dump,
+    ToggleAi,
+    SetSize(String),
 }
 
 fn heat_map_color(heat: u8, max_heat: u8) -> u8 {
@@ -64,9 +80,9 @@ fn render_tile_avail(text: &str, style: &str, app: &App, pos: Pos) -> Html {
     let click_handler = app
         .cell_click
         .get(pos.x as usize)
-        .unwrap()
+        .expect("click handler column")
         .get(pos.y as usize)
-        .unwrap();
+        .expect("click handler");
 
     html! {
         <td style=style onclick=click_handler>{ text }</td>
@@ -82,7 +98,7 @@ fn render_tile_nonavail(text: &str, style: &str) -> Html {
 fn render_row(app: &App, y: u16) -> Html {
     html! {
         <tr>
-            { (0.. BOARD_WIDTH).map(|x| render_tile(app, Pos {x, y})).collect::<Html>() }
+            { (0.. app.game.size().width).map(|x| render_tile(app, Pos {x, y})).collect::<Html>() }
         </tr>
     }
 }
@@ -92,17 +108,31 @@ impl Component for App {
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let mut interval = IntervalService::new();
+        let callback_tick = link.callback(|_| Msg::Tick);
+        let handle = interval.spawn(Duration::from_millis(150), callback_tick.clone());
+        let tick_handle = Box::new(handle);
+        let game = game::GameState::new();
+        let size = game.size();
+        let click_map = (0..size.width)
+            .map(|x| {
+                (0..size.height)
+                    .map(|y| link.callback(move |_| Msg::MakeMove(Pos { x, y })))
+                    .collect()
+            })
+            .collect();
+        let size = game.size().width;
+
         App {
-            ai_move_click: link.callback(|_| Msg::MakeAiMove),
-            game: game::GameState::new(),
-            cell_click: (0..BOARD_WIDTH)
-                .map(|x| {
-                    (0..BOARD_HEIGHT)
-                        .map(|y| link.callback(move |_| Msg::MakeMove(Pos { x, y })))
-                        .collect()
-                })
-                .collect(),
-            new_game_click: link.callback(|_| Msg::NewGame),
+            link,
+            game,
+            cell_click: click_map,
+            console: ConsoleService::new(),
+            callback_tick,
+            tick_handle,
+            show_advanced_controls: false,
+            disable_ai: false,
+            board_size: size,
         }
     }
 
@@ -110,57 +140,95 @@ impl Component for App {
         let game_state = &mut self.game;
 
         match msg {
-            Msg::MakeAiMove => match ai::get_ai_move(game_state) {
-                Some(tile) => {
-                    game_state.make_move(tile.pos);
-                    true
-                }
-                None => false,
-            },
             Msg::MakeMove(pos) => {
-                game_state.make_move(pos);
+                if game_state.current_player() == Player::Red || self.disable_ai {
+                    game_state.make_move(pos);
+                    true
+                } else {
+                    false
+                }
+            }
 
-                // Perform AI moves if current player is AI (Blue).
-                // TODO: Perform AI moves on a timer instead, for "animated" look.
-                while game_state.current_player() == Player::Blue {
-                    match ai::get_ai_move(game_state) {
-                        Some(tile) => {
-                            game_state.make_move(tile.pos);
-                        }
-                        None => break,
+            Msg::Tick => {
+                if game_state.current_player() == Player::Blue && !self.disable_ai {
+                    if let Some(m) = ai::get_ai_move(game_state) {
+                        game_state.make_move(m);
+                        return true;
                     }
                 }
 
+                false
+            }
+
+            Msg::MakeAiMove => {
+                if let Some(m) = ai::get_ai_move(game_state) {
+                    game_state.make_move(m);
+                    true
+                } else {
+                    false
+                }
+            }
+
+            Msg::NewGame => {
+                let size = Size {
+                    width: self.board_size,
+                    height: self.board_size,
+                };
+
+                self.game = game::GameState::new_custom(6, size);
+
                 true
             }
-            Msg::NewGame => {
-                self.game = game::GameState::new();
+
+            Msg::ToggleAdvancedControls => {
+                self.show_advanced_controls = !self.show_advanced_controls;
+                true
+            }
+
+            Msg::Dump => {
+                let dump = self.game.serialize();
+                self.console.info(&dump);
+                false
+            }
+
+            Msg::ToggleAi => {
+                self.disable_ai = !self.disable_ai;
+                false
+            }
+
+            Msg::SetSize(size_str) => {
+                self.board_size = size_str.parse::<Bsize>().unwrap();
+
                 true
             }
         }
     }
 
     fn view(&self) -> Html {
-        let g = &self.game;
+        let game = &self.game;
 
-        let status = if let Some(winner) = g.winner() {
+        let status = if let Some(winner) = game.winner() {
             format!("Game over, {:?} won!", winner)
         } else {
             format!(
                 "Player: {:?} | Clicks: {}",
-                g.current_player(),
-                g.moves_left()
+                game.current_player(),
+                game.moves_left()
             )
         };
 
         html! {
             <>
-                <img src="logo.svg" alt="Logo" style="width: 640px"/>
+                <div>
+                    <div style="float: right">
+                        <img src="rust_logo.svg" alt="Rust Logo" style="width: 80px" onclick=self.link.callback(|_| Msg::ToggleAdvancedControls) />
+                    </div>
+                    <img src="logo.svg" alt="Klopodavka Logo" style="width: 640px"/>
+                </div>
 
                 <div>
                     <div style="float: right">
-                        <button class="button" style="margin-right: 10px" onclick=&self.ai_move_click>{ "AI Move" }</button>
-                        <button class="button" onclick=&self.new_game_click>{ "New Game" }</button>
+                        <button class="button" onclick=self.link.callback(|_| Msg::NewGame)>{ "New Game" }</button>
                     </div>
 
                     <div>
@@ -169,7 +237,7 @@ impl Component for App {
 
                     <p>
                         <table>
-                            { (0.. BOARD_HEIGHT).map(|y| render_row(&self, y)).collect::<Html>() }
+                            { (0.. game.size().height).map(|y| render_row(&self, y)).collect::<Html>() }
                         </table>
                     </p>
                 </div>
@@ -177,6 +245,27 @@ impl Component for App {
                 <div>
                     <span>{"Source: "}</span><a href="https://github.com/ptupitsyn/klopodavka-rs"> { "github.com/ptupitsyn/klopodavka-rs" } </a>
                 </div>
+
+                {
+                    if (self.show_advanced_controls) {
+                        html!
+                        {
+                            <div style="margin-top: 20px;">
+                                <label>
+                                    <input type="checkbox" checked=self.disable_ai onclick=self.link.callback(|_| Msg::ToggleAi) />
+                                    { "Disable AI" }
+                                </label>
+                                <button class="button" onclick=self.link.callback(|_| Msg::MakeAiMove)>{ "Make AI Move" }</button>
+                                <button class="button" onclick=self.link.callback(|_| Msg::Dump)>{ "Dump" }</button>
+                                { " Size:" }
+                                <input type="number" value=&self.board_size oninput=self.link.callback(|e: InputData| Msg::SetSize(e.value)) />
+                            </div>
+                        }
+                    } else {
+                        html! {}
+                    }
+                }
+
             </>
         }
     }

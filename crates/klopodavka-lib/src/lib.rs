@@ -2,6 +2,7 @@ pub mod ai;
 pub mod board;
 pub mod game;
 pub mod models;
+pub mod path;
 
 #[cfg(test)]
 mod tests {
@@ -15,13 +16,13 @@ mod tests {
 
         for _i in 1..20 {
             match ai::get_ai_move(&game) {
-                Some(tile) => game.make_move(tile.pos),
+                Some(pos) => game.make_move(pos),
                 None => break,
             }
         }
 
         println!("Tile size: {}", mem::size_of::<Tile>());
-        println!("Tiles size: {}", mem::size_of::<Tiles>());
+        println!("Tiles size: {}", mem::size_of::<Tiles<Tile>>());
 
         println!("{}", game);
     }
