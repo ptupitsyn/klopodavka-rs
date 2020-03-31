@@ -42,8 +42,6 @@ fn attack_move(game: &GameState, mode: AiMode) -> Option<Pos> {
     let player = game.current_player();
     let enemy = player.other();
 
-    // TODO: Use better cost instead of count()
-    // TODO: Count only empty tiles!
     let enemy_cost = |p| {
         path::find_path_ex(
             game,
@@ -56,7 +54,9 @@ fn attack_move(game: &GameState, mode: AiMode) -> Option<Pos> {
             }),
             cost,
         )
-        .map_or(std::u32::MAX, |p| p.count() as u32)
+        .map_or(std::u32::MAX, |path| {
+            path.filter(|&p| game.tile(p).is_empty()).count() as u32
+        })
     };
 
     // Use heat map to find reachable tile that is the most important for the enemy,
