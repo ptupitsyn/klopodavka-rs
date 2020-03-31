@@ -490,10 +490,16 @@ mod tests {
 
     #[test]
     fn serialize_deserialize_returns_same_state() {
-        let game = GameState::new();
+        let mut game = GameState::new();
+
+        for _ in 0..100 {
+            game.make_move(*game.moves().first().unwrap())
+        }
+
         let ser = game.serialize();
         let game2 = GameState::deserialize(ser);
 
         assert_eq!(game, game2);
+        println!("{}", game);
     }
 }
