@@ -42,82 +42,6 @@ pub struct GameState {
     pub disable_heat_map: bool,
 }
 
-fn update_moves(game: &mut GameState) {
-    // Reuse existing vector.
-    game.moves
-        .splice(0.., board::moves(&game.board, game.current_player));
-
-    // Reallocate map - faster than clean/update.
-    game.moves_map = Tiles::with_size(game.board.size());
-
-    for pos in game.moves.iter() {
-        game.moves_map.setp(*pos, true);
-    }
-}
-
-fn update_heat_map_incrementally(
-    map: &mut HeatMap,
-    board: &Board,
-    max_val: u8,
-    pos: Pos,
-    player: Player,
-) {
-    map[pos].set(player, max_val);
-
-    let mut pending: Vec<Pos> = Vec::new();
-    pending.push(pos);
-
-    let enemy = player.other();
-
-    while let Some(pos) = pending.pop() {
-        let pos_heat = map[pos].get(player);
-
-        let neighb_heat = match board[pos] {
-            Tile::Empty => pos_heat - 1,
-            Tile::Alive(pl) if pl == enemy => pos_heat - 1,
-            Tile::Alive(pl) | Tile::Squashed(pl) | Tile::Base(pl) if pl == player => pos_heat,
-            other => panic!("unexpected tile: {:?}", other),
-        };
-
-        for neighb in board::neighbors(pos, map.size()) {
-            let tile = board[neighb];
-
-            if neighb_heat > map[neighb].get(player)
-                && tile != Tile::Squashed(enemy)
-                && tile != Tile::Base(enemy)
-            {
-                map[neighb].set(player, neighb_heat);
-                pending.push(neighb);
-            }
-        }
-    }
-}
-
-fn update_heat_map_fully(game: &mut GameState, player: Player) {
-    let map = &mut game.heat_map;
-
-    for pos in board::pos_iter(map.size()) {
-        match player {
-            Player::Red => map[pos].red = 0,
-            Player::Blue => map[pos].blue = 0,
-        };
-    }
-
-    for connected_tile_pos in board::connected_tiles(&game.board, player, false) {
-        update_heat_map_incrementally(
-            &mut game.heat_map,
-            &game.board,
-            game.turn_length as u8,
-            connected_tile_pos,
-            player,
-        );
-    }
-}
-
-fn new_moves_map(size: Size) -> BoolTiles {
-    Tiles::with_size(size)
-}
-
 #[allow(clippy::new_without_default)]
 impl GameState {
     pub fn new() -> Self {
@@ -134,7 +58,7 @@ impl GameState {
             current_player: player,
             turn_length,
             moves_left: turn_length,
-            moves_map: new_moves_map(size),
+            moves_map: GameState::new_moves_map(size),
             moves: Vec::with_capacity(64),
             heat_map: Tiles::with_size(size),
             disable_heat_map: false,
@@ -146,10 +70,11 @@ impl GameState {
     }
 
     fn init(&mut self) {
-        update_heat_map_fully(&mut self, Player::Red);
-        update_heat_map_fully(&mut self, Player::Blue);
+        // TODO: Convert those to member fn
+        self.update_heat_map_fully(Player::Red);
+        self.update_heat_map_fully(Player::Blue);
 
-        update_moves(&mut self);
+        self.update_moves();
     }
 
     pub fn tile(&self, pos: Pos) -> Tile {
@@ -225,7 +150,7 @@ impl GameState {
         board::make_move(&mut self.board, player, pos.x, pos.y);
 
         if !self.disable_heat_map {
-            update_heat_map_incrementally(
+            GameState::update_heat_map_incrementally(
                 &mut self.heat_map,
                 &self.board,
                 self.turn_length as u8,
@@ -236,7 +161,7 @@ impl GameState {
             if self.tile(pos).is_squashed() {
                 // Squash move causes ownership change and possible branch disconnect,
                 // full recompute is required for the other player tiles.
-                update_heat_map_fully(self, player.other());
+                self.update_heat_map_fully(player.other());
             }
         }
 
@@ -254,7 +179,7 @@ impl GameState {
             self.current_player = player.other();
         }
 
-        update_moves(self);
+        self.update_moves();
     }
 
     pub fn serialize(&self) -> String {
@@ -306,7 +231,7 @@ impl GameState {
             current_player: player,
             turn_length,
             moves_left: moves_left,
-            moves_map: new_moves_map(size),
+            moves_map: GameState::new_moves_map(size),
             moves: Vec::with_capacity(64),
             heat_map: Tiles::with_size(size),
             disable_heat_map: false,
@@ -315,6 +240,82 @@ impl GameState {
         res.init();
 
         res
+    }
+
+    fn update_moves(&mut self) {
+        // Reuse existing vector.
+        self.moves
+            .splice(0.., board::moves(&self.board, self.current_player));
+
+        // Reallocate map - faster than clean/update.
+        self.moves_map = Tiles::with_size(self.board.size());
+
+        for pos in self.moves.iter() {
+            self.moves_map.setp(*pos, true);
+        }
+    }
+
+    fn update_heat_map_incrementally(
+        map: &mut HeatMap,
+        board: &Board,
+        max_val: u8,
+        pos: Pos,
+        player: Player,
+    ) {
+        map[pos].set(player, max_val);
+
+        let mut pending: Vec<Pos> = Vec::new();
+        pending.push(pos);
+
+        let enemy = player.other();
+
+        while let Some(pos) = pending.pop() {
+            let pos_heat = map[pos].get(player);
+
+            let neighb_heat = match board[pos] {
+                Tile::Empty => pos_heat - 1,
+                Tile::Alive(pl) if pl == enemy => pos_heat - 1,
+                Tile::Alive(pl) | Tile::Squashed(pl) | Tile::Base(pl) if pl == player => pos_heat,
+                other => panic!("unexpected tile: {:?}", other),
+            };
+
+            for neighb in board::neighbors(pos, map.size()) {
+                let tile = board[neighb];
+
+                if neighb_heat > map[neighb].get(player)
+                    && tile != Tile::Squashed(enemy)
+                    && tile != Tile::Base(enemy)
+                {
+                    map[neighb].set(player, neighb_heat);
+                    pending.push(neighb);
+                }
+            }
+        }
+    }
+
+    fn update_heat_map_fully(&mut self, player: Player) {
+        let map = &mut self.heat_map;
+
+        for pos in board::pos_iter(map.size()) {
+            match player {
+                Player::Red => map[pos].red = 0,
+                Player::Blue => map[pos].blue = 0,
+            };
+        }
+
+        for connected_tile_pos in board::connected_tiles(&self.board, player, false) {
+            GameState::update_heat_map_incrementally(
+                &mut self.heat_map,
+                &self.board,
+                self.turn_length as u8,
+                connected_tile_pos,
+                player,
+            );
+        }
+    }
+
+    fn new_moves_map(size: Size) -> BoolTiles {
+        Tiles::with_size(size)
     }
 }
 
