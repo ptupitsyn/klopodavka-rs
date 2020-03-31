@@ -61,33 +61,28 @@ fn attack_move(game: &GameState, mode: AiMode) -> Option<Pos> {
 
     // Use heat map to find reachable tile that is the most important for the enemy,
     // then squash that tile.
-    // TODO: Remove redundant vectors, convert to a single expr.
-    let mut filtered: Vec<(TilePos, u32)> = game
+    let best_move = game
         .tiles()
         .filter(|&t| t.tile == Tile::Alive(enemy) && game.heat(t.pos).get(player) > 0)
         .map(|t| (t, enemy_cost(t.pos)))
-        .collect();
+        .max_by(|&a, &b| a.1.cmp(&b.1));
 
-    filtered.sort_by(|&a, &b| a.1.cmp(&b.1));
+    let best_pos = best_move?.0.pos;
 
-    let best = filtered.last().copied()?.0.pos;
-
-    if game.is_valid_move(best) {
-        return Some(best);
+    if game.is_valid_move(best_pos) {
+        return Some(best_pos);
     }
 
-    let path: Vec<Pos> =
-        path::find_path_ex(game, player, game.current_base(), best, None, cost_default)
-            .unwrap()
-            .collect();
-
-    let valid_path_moves: Vec<Pos> = path
-        .iter()
-        .filter(|&&p| game.is_valid_move(p))
-        .copied()
-        .collect();
-
-    valid_path_moves.first().copied()
+    // Not immediately reachable => find path.
+    path::find_path_ex(
+        game,
+        player,
+        game.current_base(),
+        best_pos,
+        None,
+        cost_default,
+    )?
+    .find(|&p| game.is_valid_move(p))
 }
 
 fn advance_move(game: &GameState, mode: AiMode) -> Option<Pos> {
