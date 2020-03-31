@@ -29,6 +29,7 @@ pub enum Msg {
     ToggleAdvancedControls,
     Dump,
     ToggleAi,
+    SetSize(String),
 }
 
 fn heat_map_color(heat: u8, max_heat: u8) -> u8 {
@@ -194,6 +195,12 @@ impl Component for App {
                 self.disable_ai = !self.disable_ai;
                 false
             }
+
+            Msg::SetSize(size_str) => {
+                self.board_size = size_str.parse::<Bsize>().unwrap();
+
+                true
+            }
         }
     }
 
@@ -251,7 +258,7 @@ impl Component for App {
                                 <button class="button" onclick=self.link.callback(|_| Msg::MakeAiMove)>{ "Make AI Move" }</button>
                                 <button class="button" onclick=self.link.callback(|_| Msg::Dump)>{ "Dump" }</button>
                                 { " Size:" }
-                                <input type="number" value=&self.board_size />
+                                <input type="number" value=&self.board_size oninput=self.link.callback(|e: InputData| Msg::SetSize(e.value)) />
                             </div>
                         }
                     } else {
