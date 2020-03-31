@@ -252,39 +252,48 @@ impl GameState {
 
         update_moves(self);
     }
+
+    pub fn serialize(&self) -> String {
+        fn get_ch(tile: Tile) -> char {
+            match tile {
+                Tile::Empty => '·',
+                Tile::Base(Player::Blue) => 'L',
+                Tile::Base(Player::Red) => 'E',
+                Tile::Alive(Player::Blue) => 'b',
+                Tile::Alive(Player::Red) => 'r',
+                Tile::Squashed(Player::Blue) => 'B',
+                Tile::Squashed(Player::Red) => 'R',
+            }
+        }
+
+        let (w, h) = (self.size().width, self.size().height);
+        let cap = w * h + 50;
+        let mut buf = String::with_capacity(cap as usize);
+
+        buf.push_str(
+            format!(
+                "{}x{},{}/{},{:?}\n",
+                w, h, self.moves_left, self.turn_length, self.current_player
+            )
+            .as_str(),
+        );
+
+        for y in 0..h {
+            for x in 0..w {
+                let tile = self.board.get(x, y).expect("invalid tile");
+                buf.push(get_ch(tile));
+            }
+
+            buf.push('\n')
+        }
+
+        buf
+    }
 }
 
 impl std::fmt::Display for GameState {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fn get_ch(tile: Tile) -> char {
-            match tile {
-                Tile::Empty => '.',
-                Tile::Base(Player::Blue) => '⬛',
-                Tile::Base(Player::Red) => '⬤',
-                Tile::Alive(Player::Blue) => '◻',
-                Tile::Alive(Player::Red) => '○',
-                Tile::Squashed(Player::Blue) => '◼',
-                Tile::Squashed(Player::Red) => '●',
-            }
-        }
-
-        let mut res = String::new();
-
-        #[allow(clippy::needless_range_loop)]
-        for y in 0..self.board.size().height {
-            for x in 0..self.board.size().width {
-                let tile = self.board.get(x, y).expect("valid tile");
-                let ch = get_ch(tile);
-                res.push(ch);
-            }
-            res.push('\n');
-        }
-
-        write!(
-            f,
-            "{:?}, {} of {}\n{}",
-            self.current_player, self.moves_left, self.turn_length, res
-        )
+        write!(f, "{}", self.serialize())
     }
 }
 
