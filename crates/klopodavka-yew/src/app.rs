@@ -1,4 +1,3 @@
-use crate::app::Msg::MakeMove;
 use klopodavka_lib::game::{GameState, HeatMapTile};
 use klopodavka_lib::models::*;
 use klopodavka_lib::{ai, game};
@@ -204,7 +203,7 @@ impl Component for App {
                             html!
                             {
                                 <div>
-                                    <button class="button">{ "Dump" }</button>
+                                    <button class="button" onclick=&self.dump_click>{ "Dump" }</button>
                                 </div>
                             }
                         } else {
